@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Site2WebMCP",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Turn any webpage\u2019s forms and actions into WebMCP tools for AI agents.",
   "permissions": [
     "scripting",

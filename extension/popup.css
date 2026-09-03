@@ -93,15 +93,39 @@ code { font-size: 10px; }
 
 .connect {
   margin-top: 12px;
-  padding: 10px 12px;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
+  overflow: hidden;
 }
+.connect summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.connect summary::-webkit-details-marker { display: none; }
+.connect summary::after {
+  content: "▸";
+  font-size: 11px;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+.connect[open] summary::after { transform: rotate(90deg); }
+.connect-body { padding: 0 12px 12px; }
 .connect .hint { font-size: 11px; color: var(--muted); line-height: 1.4; margin: 0 0 8px; }
 .connect .steps { margin: 0 0 10px; padding-left: 18px; font-size: 11px; color: var(--text); line-height: 1.45; }
 .connect .steps li { margin-bottom: 8px; }
 .connect .steps code { font-size: 10px; }
 #copy-agent { width: 100%; margin-top: 0; }
-footer a { color: var(--accent); }
-body { max-height: 560px; overflow: auto; }
+.docs-link { margin: 8px 0 0; font-size: 11px; }
+.docs-link a, footer a { color: var(--accent); }

@@ -36,20 +36,22 @@
     <button type="button" id="copy" class="secondary">Copy debug snippet</button>
   </section>
 
-  <section class="connect" id="connect">
-    <h2>Connect an agent</h2>
-    <p class="hint"><strong>Video path:</strong> live Amazon + DevTools/Inspector <code>executeTool</code> (see repo <code>docs/VIDEO_AMAZON.md</code>). WebMCP tools live on the <strong>page</strong>, not as a separate MCP server. The agent must open this tab’s URL in a WebMCP-capable browser.</p>
-    <ol class="steps">
-      <li><strong>ChatGPT / Codex (real agent)</strong> — Desktop app → built-in browser → open this page (demo: <code>http://localhost:8765</code> or a public HTTPS URL). Use model <strong>GPT-5.6 Sol or Terra</strong> (not Luna). Click <em>Site tools</em> in the address bar; ask e.g. “list site tools, then search for kettle and add Electric Kettle to cart.” Extension does <em>not</em> run inside ChatGPT’s browser — use the demo’s built-in auto-WebMCP (or host that page).</li>
-      <li><strong>Chrome (manual / Inspector)</strong> — Enable <code>chrome://flags/#enable-webmcp-testing</code>, reload this page with Site2WebMCP on, install “WebMCP - Model Context Tool Inspector”, or paste the debug snippet in DevTools.</li>
-      <li><strong>Other agents</strong> — Only clients that speak <em>page</em> WebMCP (in-page <code>document.modelContext</code>) work. Classic MCP stdio/SSE connectors will not see these tools.</li>
-    </ol>
-    <button type="button" id="copy-agent" class="secondary">Copy agent prompt</button>
-  </section>
+  <details class="connect" id="connect">
+    <summary>Connect an agent</summary>
+    <div class="connect-body">
+      <p class="hint">WebMCP tools live on the <strong>page</strong>, not as a separate MCP server. Prefer <strong>Codex + agent-browser</strong> (Chrome with this extension). ChatGPT’s built-in browser does not load extensions.</p>
+      <ol class="steps">
+        <li><strong>Codex</strong> — Use agent-browser / Chrome with Site2WebMCP loaded; open the site; ask it to list WebMCP tools and run a short workflow.</li>
+        <li><strong>Chrome debug</strong> — Enable <code>chrome://flags/#enable-webmcp-testing</code>, reload the page, use DevTools <code>getTools()</code> / Tool Inspector, or copy the debug snippet.</li>
+        <li><strong>Other agents</strong> — Only clients that speak in-page <code>document.modelContext</code>. Classic MCP stdio/SSE connectors will not see these tools.</li>
+      </ol>
+      <button type="button" id="copy-agent" class="secondary">Copy agent prompt</button>
+      <p class="docs-link"><a href="#" id="open-docs">Full connect guide</a></p>
+    </div>
+  </details>
 
   <footer>
     <p>Flag: <code>chrome://flags/#enable-webmcp-testing</code></p>
-    <p><a href="#" id="open-docs">Full connect guide</a> (opens docs in a tab)</p>
   </footer>
   <script src="popup.js"></script>
 </body>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Site2WebMCP</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo" aria-hidden="true">◎</span>
+      <div>
+        <h1>Site2WebMCP</h1>
+        <p class="sub">DOM → WebMCP tools</p>
+      </div>
+    </div>
+    <label class="toggle" title="Enable or disable on this browser">
+      <input type="checkbox" id="enabled" checked />
+      <span>Enabled</span>
+    </label>
+  </header>
+
+  <section class="meta">
+    <div id="hostname" class="hostname">—</div>
+    <div id="status" class="status">Scanning…</div>
+  </section>
+
+  <section>
+    <h2>Tools <span id="count" class="pill">0</span></h2>
+    <ul id="tools" class="tools"></ul>
+  </section>
+
+  <section class="actions">
+    <button type="button" id="rescan">Rescan page</button>
+    <button type="button" id="copy" class="secondary">Copy debug snippet</button>
+  </section>
+
+  <footer>
+    <p>Flag: <code>chrome://flags/#enable-webmcp-testing</code></p>
+  </footer>
+  <script src="popup.js"></script>
+</body>
+</html>

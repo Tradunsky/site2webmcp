@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.py[cod]
+.idea/
+*.iml
+.DS_Store
+node_modules/

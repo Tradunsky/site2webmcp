@@ -1044,9 +1044,9 @@
     }
     function isSearchAction(a) {
       if (!a) return false;
-      if (a.kind === "fill_submit") return true;
-      if (a.kind === "search") return true;
-      return /search/i.test(a.toolName || "") || /search/i.test(a.toolDescription || "");
+      if (a.kind === "fill_submit" || a.kind === "search") return true;
+      // Name-only: avoid matching unrelated descriptions that mention "search"
+      return /(^|_)search(_|$)/i.test(a.toolName || "");
     }
 
     const searchForms = outForms.filter(isSearchForm);

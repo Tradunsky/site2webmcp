@@ -5,7 +5,7 @@
 (function () {
   "use strict";
 
-  // Marker so demo/auto-webmcp.js can detect the extension and skip duplicate registration.
+  // Marker for pages/tools that want to detect Site2WebMCP is active.
   try {
     document.documentElement.dataset.s2wmExtension = "1";
   } catch (_) {}

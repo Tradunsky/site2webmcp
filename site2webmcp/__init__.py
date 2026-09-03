@@ -1,3 +1,1 @@
-"""Site2WebMCP — DOM → WebMCP tools (MVP is the Chrome extension + demo)."""
-
-__version__ = "0.1.0"
+"""Site2WebMCP — Chrome extension that exposes page DOM actions as WebMCP tools."""

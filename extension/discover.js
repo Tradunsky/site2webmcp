@@ -1,6 +1,6 @@
 /**
  * Site2WebMCP — shared DOM discovery + declarative annotation.
- * Used by the Chrome extension (copied to extension/lib/).
+ * Loaded by the Chrome extension (content script + page bridge).
  *
  * Dual strategy:
  *  1) Declarative: annotate forms with toolname / tooldescription / toolautosubmit

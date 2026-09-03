@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Site2WebMCP",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Turn any webpage\u2019s forms and actions into WebMCP tools for AI agents.",
   "permissions": [
     "scripting",
@@ -36,7 +36,7 @@
         "https://*/*"
       ],
       "js": [
-        "lib/discover.js",
+        "discover.js",
         "content.js"
       ],
       "run_at": "document_idle",
@@ -47,7 +47,7 @@
     {
       "resources": [
         "CONNECT_AGENT.md",
-        "lib/discover.js",
+        "discover.js",
         "page-bridge.js"
       ],
       "matches": [

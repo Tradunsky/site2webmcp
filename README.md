@@ -21,7 +21,7 @@ Or install from the Chrome Web Store once published.
 
 ## Connect an agent
 
-See **[docs/CONNECT_AGENT.md](docs/CONNECT_AGENT.md)** (also linked from the extension popup).
+See **[docs/CONNECT_AGENT.md](docs/CONNECT_AGENT.md)** (also in the extension popup under **Connect an agent**).
 
 Short version: point **Codex at agent-browser/Chrome** with the extension loaded; or debug with the WebMCP flag + DevTools `getTools()` / `executeTool`.
 
@@ -40,20 +40,25 @@ if (!ctx) {
 ## Repo layout
 
 ```
-extension/     # Chrome MV3 extension (store package root)
-shared/        # discover.js source of truth → copied to extension/lib/
-docs/          # agent connect + video notes
-LICENSE        # MIT
+extension/          # Chrome MV3 package (store zip root)
+  manifest.json
+  discover.js       # DOM → tool plan
+  content.js
+  background.js
+  page-bridge.js
+  popup.*
+  icons/
+  CONNECT_AGENT.md
+docs/               # extra notes (not shipped in the store zip)
+LICENSE
 ```
-
-After editing `shared/discover.js`, copy it to `extension/lib/discover.js` before packing.
 
 ## Packaging for Chrome Web Store
 
-Zip the **contents** of `extension/` so `manifest.json` is at the zip root. Do not include `docs/`, `.git`, or media assets unless you intend to ship them.
+Zip the **contents** of `extension/` so `manifest.json` is at the zip root.
 
 ## Troubleshooting
 
 - **`modelContext` undefined:** enable the WebMCP testing flag; use `https://` or `http://localhost` (not `0.0.0.0`).
 - **No tools:** reload the page after loading/updating the extension; check the popup toggle.
-- **Duplicate search tools:** update to latest; discovery dedupes `search` vs `search_query` after scan.
+- **Duplicate search tools:** discovery dedupes `search` vs `search_query` after scan.

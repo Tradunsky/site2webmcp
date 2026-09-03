@@ -1,15 +1,11 @@
+.DS_Store
+.idea/
+*.iml
 .venv/
 __pycache__/
 *.py[cod]
-.idea/
-*.iml
-.DS_Store
-node_modules/
-site2webmcp.zip
 *.zip
+site2webmcp.zip
 docs/*.mp4
 docs/*.mp3
-# keep docs images optional — ignore heavy demo assets
-docs/Site2webmcp_demo.mp4
-docs/music.mp3
 docs/img.png

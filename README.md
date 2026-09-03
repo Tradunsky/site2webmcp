@@ -63,3 +63,7 @@ Zip the **contents** of `extension/` so `manifest.json` is at the zip root.
 - **`modelContext` undefined:** enable the WebMCP testing flag; use `https://` or `http://localhost` (not `0.0.0.0`).
 - **No tools:** reload the page after loading/updating the extension.
 - **Duplicate search tools:** discovery dedupes `search` vs `search_query` after scan.
+
+## Privacy
+
+The extension processes the current tab locally and does not upload page content. See [PRIVACY.md](PRIVACY.md).

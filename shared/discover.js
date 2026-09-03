@@ -113,6 +113,10 @@
     "[data-product-id]",
   ].join(", ");
 
+  function isAmazonHost() {
+    return /amazon\./i.test(location.hostname || "");
+  }
+
   function hostnamePrefix() {
     try {
       const h = (location.hostname || "local").replace(/^www\./, "");
@@ -1121,9 +1125,13 @@
       });
     }
 
-    // list_products: only when the DOM shows a multi-item catalog (≥2 cards)
+    // list_products: multi-item catalog only — skip Amazon SERPs (noisy/false "catalog")
     const productCards = findProductCards();
-    if (productCards.length >= 2 && forms.length < opts.maxTools) {
+    if (
+      productCards.length >= 2 &&
+      forms.length < opts.maxTools &&
+      !isAmazonHost()
+    ) {
       rawMatches.unshift({
         kind: "list_products",
         matchedLabel: "List products",
@@ -1136,13 +1144,54 @@
       });
     }
 
+    // Reliable search executeTool path (Amazon nav search etc.) — only if DOM has a search box.
+    // Prefer a single search tool: if fill_submit applies, drop declarative search forms that
+    // point at the same nav search UI (avoids amazon_*_search + amazon_*_search_query dupes).
+    let fill = null;
+    if (forms.length < opts.maxTools) {
+      fill = discoverSearchFillSubmit(prefix, usedNames);
+    }
+    if (fill) {
+      const fillFormSel = fill.formSelector;
+      const filtered = forms.filter((f) => {
+        if (f.action !== "search") return true;
+        const el = document.querySelector(f.selector);
+        if (!el) return true;
+        // Drop if this form is the fill_submit form or contains the search input
+        if (fillFormSel && el.matches && el.matches(fillFormSel.replace(/\\/g, "\\"))) {
+          /* fall through to id-based checks */
+        }
+        const sameForm =
+          (fill.formSelector && el.id && fill.formSelector === `#${el.id}`) ||
+          (fill.inputSelector && el.querySelector && el.querySelector(fill.inputSelector)) ||
+          el.id === "nav-search-bar-form" ||
+          (el.id || "").includes("nav-search");
+        if (sameForm) {
+          usedNames.delete(f.toolName);
+          return false;
+        }
+        return true;
+      });
+      forms.length = 0;
+      forms.push(...filtered);
+    }
+
     const remaining = Math.max(0, opts.maxTools - forms.length);
     const actions = buildGroupedActions(rawMatches, usedNames, prefix, remaining);
 
-    // Reliable search executeTool path (Amazon nav search etc.) — only if DOM has a search box
-    if (forms.length + actions.length < opts.maxTools) {
-      const fill = discoverSearchFillSubmit(prefix, usedNames);
-      if (fill) actions.unshift(fill);
+    if (fill && forms.length + actions.length < opts.maxTools) {
+      // Ensure name still unique after form drops
+      if (!usedNames.has(fill.toolName)) usedNames.add(fill.toolName);
+      actions.unshift(fill);
+    } else if (fill && !actions.some((a) => a.kind === "fill_submit")) {
+      // Still prefer fill_submit even if at cap: replace a list_products if present
+      const idx = actions.findIndex((a) => a.kind === "list_products");
+      if (idx >= 0) {
+        actions.splice(idx, 1);
+        actions.unshift(fill);
+      } else if (actions.length < opts.maxTools) {
+        actions.unshift(fill);
+      }
     }
 
     return {

@@ -40,5 +40,4 @@ console.table(tools.map(t => ({ name: t.name, description: t.description })));
 
 - Flag off / not relaunched after enabling.
 - Insecure context (`http://0.0.0.0` or plain LAN IP) — use `https://` or `localhost`.
-- Extension disabled on that tab.
 - Content script not injected — reload the page after installing/updating.

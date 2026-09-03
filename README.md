@@ -1,5 +1,7 @@
 # Site2WebMCP
 
+![Faster than clicks. Cheaper than pixels.](docs/store/store-05.png)
+
 **Chrome extension that turns the current page’s forms and primary actions into [WebMCP](https://developer.chrome.com/docs/ai/webmcp/imperative-api) tools** so AI agents can use real sites without a hand-written MCP server or pixel clicking.
 
 MIT licensed. Works on any `http(s)` page where WebMCP is available (Chrome flag / capable agent browser).

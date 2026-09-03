@@ -5,7 +5,6 @@
   "description": "Turn any webpage\u2019s forms and actions into WebMCP tools for AI agents.",
   "permissions": [
     "scripting",
-    "storage",
     "activeTab"
   ],
   "host_permissions": [
@@ -41,19 +40,6 @@
       ],
       "run_at": "document_idle",
       "all_frames": false
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "CONNECT_AGENT.md",
-        "discover.js",
-        "page-bridge.js"
-      ],
-      "matches": [
-        "http://*/*",
-        "https://*/*"
-      ]
     }
   ]
 }

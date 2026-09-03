@@ -14,18 +14,7 @@
   const S2WM_ATTR_RE = /^data-s2wm|^toolname$|^tooldescription$|^toolautosubmit$|^toolparamdescription$/i;
   let debounceTimer = null;
   let lastSummary = null;
-  let enabled = true;
   let applying = false;
-
-  async function loadEnabled() {
-    try {
-      const res = await chrome.runtime.sendMessage({ type: "get-enabled" });
-      enabled = !res || res.enabled !== false;
-    } catch (_) {
-      enabled = true;
-    }
-    return enabled;
-  }
 
   function buildImperativePayload(plan) {
     return (plan.actions || []).map((a) => ({
@@ -53,32 +42,13 @@
     if (applying) return lastSummary;
     applying = true;
     try {
-      await loadEnabled();
-
-      if (!enabled) {
-        Site2WebMCP.clearAnnotations();
-        try {
-          await chrome.runtime.sendMessage({ type: "clear-actions" });
-        } catch (_) {}
-        lastSummary = {
-          hostname: location.hostname,
-          href: location.href,
-          title: document.title,
-          toolCount: 0,
-          tools: [],
-          enabled: false,
-        };
-        chrome.runtime.sendMessage({ type: "tools-updated", count: 0 }).catch(() => {});
-        return lastSummary;
-      }
-
       // Abort previous registrations (background clears then re-registers).
       // Microtask pause reduces races with in-flight registerTool.
       await Promise.resolve();
 
       Site2WebMCP.clearAnnotations();
       const plan = Site2WebMCP.annotateForms(Site2WebMCP.discover());
-      lastSummary = Object.assign(Site2WebMCP.summarize(plan), { enabled: true });
+      lastSummary = Site2WebMCP.summarize(plan);
 
       try {
         await chrome.runtime.sendMessage({
@@ -133,13 +103,7 @@
       sendResponse({ ok: true, summary: lastSummary });
       return;
     }
-    if (message.type === "set-enabled") {
-      enabled = !!message.enabled;
-      scanAndApply()
-        .then((summary) => sendResponse({ ok: true, summary }))
-        .catch((err) => sendResponse({ ok: false, error: String(err) }));
-      return true;
-    }
+
     if (message.type === "get-debug-snippet") {
       const snippet = `const ctx = document.modelContext ?? navigator.modelContext;
 if (!ctx) { console.warn('WebMCP not available — enable chrome://flags/#enable-webmcp-testing'); }

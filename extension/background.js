@@ -5,18 +5,8 @@
 
 const BRIDGE_FILE = "page-bridge.js";
 
-async function getEnabled() {
-  const sync = await chrome.storage.sync.get({ enabled: true });
-  return sync.enabled !== false;
-}
-
-async function setBadge(tabId, count, enabled) {
+async function setBadge(tabId, count) {
   try {
-    if (!enabled) {
-      await chrome.action.setBadgeText({ tabId, text: "off" });
-      await chrome.action.setBadgeBackgroundColor({ tabId, color: "#888888" });
-      return;
-    }
     const text = count > 0 ? String(count) : "";
     await chrome.action.setBadgeText({ tabId, text });
     await chrome.action.setBadgeBackgroundColor({ tabId, color: "#0B57D0" });
@@ -91,24 +81,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === "tools-updated") {
     if (tabId != null) {
-      getEnabled().then((enabled) => setBadge(tabId, message.count || 0, enabled));
+      setBadge(tabId, message.count || 0);
     }
     sendResponse({ ok: true });
     return;
-  }
-
-  if (message.type === "get-enabled") {
-    getEnabled().then((enabled) => sendResponse({ enabled }));
-    return true;
-  }
-
-  if (message.type === "set-enabled") {
-    const enabled = !!message.enabled;
-    chrome.storage.sync.set({ enabled }).then(() => {
-      if (tabId != null) setBadge(tabId, message.count || 0, enabled);
-      sendResponse({ ok: true, enabled });
-    });
-    return true;
   }
 
   if (message.type === "popup-scan") {
@@ -131,7 +107,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.tabs.onUpdated.addListener((tabId, info) => {
   if (info.status === "loading") {
-    setBadge(tabId, 0, true);
+    setBadge(tabId, 0);
   }
 });
 

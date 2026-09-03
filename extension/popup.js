@@ -31,13 +31,9 @@ function renderSummary(summary, tab) {
   $("hostname").textContent = host;
   const tools = (summary && summary.tools) || [];
   $("count").textContent = String(tools.length);
-  const enabled = !summary || summary.enabled !== false;
-  $("enabled").checked = enabled;
-  $("status").textContent = enabled
-    ? tools.length
-      ? `${tools.length} tool(s) exposed on this page`
-      : "No discoverable forms/actions yet"
-    : "Disabled — tools cleared";
+  $("status").textContent = tools.length
+    ? `${tools.length} tool(s) exposed on this page`
+    : "No discoverable forms/actions yet";
 
   const ul = $("tools");
   ul.innerHTML = "";
@@ -61,7 +57,7 @@ function renderSummary(summary, tab) {
 async function refresh() {
   const tab = await activeTab();
   if (!tab || tab.id == null || !/^https?:/.test(tab.url || "")) {
-    renderSummary({ hostname: "unsupported", tools: [], enabled: true }, tab);
+    renderSummary({ hostname: "unsupported", tools: [] }, tab);
     $("status").textContent = "Open an http(s) page to discover tools.";
     return;
   }
@@ -95,21 +91,6 @@ $("rescan").addEventListener("click", async () => {
   }
 });
 
-$("enabled").addEventListener("change", async () => {
-  const enabled = $("enabled").checked;
-  await chrome.storage.sync.set({ enabled });
-  await chrome.runtime.sendMessage({ type: "set-enabled", enabled });
-  const tab = await activeTab();
-  if (tab && tab.id != null) {
-    try {
-      const res = await chrome.tabs.sendMessage(tab.id, { type: "set-enabled", enabled });
-      renderSummary((res && res.summary) || { tools: [], enabled }, tab);
-    } catch (_) {
-      refresh();
-    }
-  }
-});
-
 $("copy").addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(DEBUG_SNIPPET);
@@ -130,8 +111,25 @@ $("copy-agent").addEventListener("click", async () => {
 
 $("open-docs").addEventListener("click", (e) => {
   e.preventDefault();
-  const url = chrome.runtime.getURL("CONNECT_AGENT.md");
-  chrome.tabs.create({ url });
+  chrome.tabs.create({
+    url: "https://github.com/Tradunsky/site2webmcp/blob/master/docs/CONNECT_AGENT.md",
+  });
+});
+
+const panel = $("connect-panel");
+function setConnectOpen(open) {
+  panel.hidden = !open;
+  $("home").hidden = open;
+  if (open) $("close-connect").focus();
+  else $("open-connect").focus();
+}
+$("open-connect").addEventListener("click", () => setConnectOpen(true));
+$("close-connect").addEventListener("click", () => setConnectOpen(false));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !panel.hidden) {
+    e.preventDefault();
+    setConnectOpen(false);
+  }
 });
 
 refresh();

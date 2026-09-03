@@ -182,6 +182,146 @@
       });
     }
 
+    if (kind === "click_link") {
+      const textQ = args && args.text != null ? String(args.text).trim() : "";
+      const hrefQ = args && args.href != null ? String(args.href).trim().toLowerCase() : "";
+      const linkId = args && args.link != null ? String(args.link).trim() : "";
+      const targets = action.targets || [];
+
+      let hit = null;
+      if (linkId) {
+        hit = targets.find((x) => String(x.id) === linkId);
+      }
+      if (!hit && (textQ || hrefQ)) {
+        const tl = textQ.toLowerCase();
+        const scored = [];
+        for (const t of targets) {
+          const label = String(t.label || "").toLowerCase();
+          const href = String(t.href || "").toLowerCase();
+          let score = 0;
+          if (tl && label === tl) score += 100;
+          else if (tl && label.includes(tl)) score += 40;
+          else if (tl && tl.includes(label) && label.length > 8) score += 20;
+          if (hrefQ && href.includes(hrefQ)) score += 50;
+          if (score > 0) scored.push({ t, score });
+        }
+        scored.sort((a, b) => b.score - a.score);
+        hit = scored.length ? scored[0].t : null;
+
+        // Live DOM fallback if index stale
+        if (!hit) {
+          const anchors = Array.from(document.querySelectorAll("a[href]"));
+          for (const a of anchors) {
+            const label = (a.textContent || a.getAttribute("aria-label") || "").trim().toLowerCase();
+            const href = (a.href || "").toLowerCase();
+            if (tl && !label.includes(tl) && !(a.querySelector("h1,h2,h3") || {}).textContent) {
+              const h = a.querySelector("h1,h2,h3,h4");
+              const ht = h ? h.textContent.trim().toLowerCase() : "";
+              if (!ht.includes(tl)) continue;
+            } else if (tl && !label.includes(tl)) {
+              const h = a.querySelector("h1,h2,h3,h4");
+              const ht = h ? h.textContent.trim().toLowerCase() : "";
+              if (!ht.includes(tl)) continue;
+            }
+            if (hrefQ && !href.includes(hrefQ)) continue;
+            a.scrollIntoView({ block: "center", behavior: "instant" });
+            a.click();
+            await delay(50);
+            return toolResult({
+              ok: true,
+              clicked: (a.textContent || "").trim().slice(0, 120),
+              href: a.href,
+              via: "live_dom",
+            });
+          }
+        }
+      }
+
+      if (!hit) {
+        return toolResult({
+          ok: false,
+          error: "No matching link. Pass text and/or href substring, or link id.",
+          options: targets.slice(0, 15).map((t) => ({ id: t.id, label: t.label, href: t.href })),
+        });
+      }
+
+      const clicked = await clickSelector(hit.selector);
+      if (!clicked.ok) {
+        // try href navigation as last resort
+        if (hit.href) {
+          location.href = hit.href;
+          return toolResult({ ok: true, navigated: hit.href, label: hit.label, via: "location" });
+        }
+        return toolResult(clicked);
+      }
+      return toolResult({
+        ok: true,
+        clicked: hit.label,
+        href: hit.href,
+        selector: hit.selector,
+      });
+    }
+
+    if (kind === "find_in_page") {
+      const query = args && args.query != null ? String(args.query).trim() : "";
+      if (!query) return toolResult({ ok: false, error: "Missing query" });
+      let max = args && args.max_results != null ? Number(args.max_results) : 5;
+      if (!Number.isFinite(max) || max < 1) max = 5;
+      max = Math.min(15, Math.floor(max));
+      const scroll = !!(args && args.scroll);
+
+      const q = query.toLowerCase();
+      const matches = [];
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+          const p = node.parentElement;
+          if (!p) return NodeFilter.FILTER_REJECT;
+          const tag = p.tagName;
+          if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT") return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      });
+
+      let firstEl = null;
+      while (walker.nextNode()) {
+        const raw = walker.currentNode.nodeValue;
+        const lower = raw.toLowerCase();
+        let from = 0;
+        while (matches.length < max) {
+          const idx = lower.indexOf(q, from);
+          if (idx < 0) break;
+          const start = Math.max(0, idx - 60);
+          const end = Math.min(raw.length, idx + query.length + 60);
+          let snippet = raw.slice(start, end).replace(/\s+/g, " ").trim();
+          if (start > 0) snippet = "…" + snippet;
+          if (end < raw.length) snippet = snippet + "…";
+          const el = walker.currentNode.parentElement;
+          if (!firstEl) firstEl = el;
+          matches.push({
+            snippet,
+            tag: el ? el.tagName.toLowerCase() : null,
+          });
+          from = idx + query.length;
+        }
+        if (matches.length >= max) break;
+      }
+
+      if (scroll && firstEl && typeof firstEl.scrollIntoView === "function") {
+        try {
+          firstEl.scrollIntoView({ block: "center", behavior: "instant" });
+        } catch (_) {}
+      }
+
+      return toolResult({
+        ok: true,
+        query,
+        count: matches.length,
+        matches,
+        scrolled: !!(scroll && firstEl),
+      });
+    }
+
     if (kind === "list_products") {
       return toolResult(listProductsPayload());
     }

@@ -18,7 +18,7 @@
 (function (root) {
   "use strict";
 
-  const MAX_TOOLS = 20;
+  const MAX_TOOLS = 24;
   const ATTR_MARK = "data-s2wm";
   const ID_ATTR = "data-s2wm-id";
   const MAX_PRODUCT_DETAILS = 6;
@@ -1030,6 +1030,132 @@
     return added;
   }
 
+  const MAX_LINKS_ENUM = 20;
+
+  function collectNavigableLinks(limit) {
+    const lim = limit || MAX_LINKS_ENUM;
+    const out = [];
+    const seen = new Set();
+    const anchors = Array.from(document.querySelectorAll("a[href]"));
+    for (const a of anchors) {
+      if (out.length >= lim) break;
+      if (!isVisible(a)) continue;
+      const href = (a.href || a.getAttribute("href") || "").trim();
+      if (!href || href.startsWith("javascript:") || href === "#") continue;
+      try {
+        const u = new URL(href, location.href);
+        if (u.protocol !== "http:" && u.protocol !== "https:") continue;
+      } catch (_) {
+        continue;
+      }
+      let text = (a.getAttribute("aria-label") || a.textContent || "").trim().replace(/\s+/g, " ");
+      // Prefer heading text inside the link (Google result titles)
+      const h = a.querySelector("h1,h2,h3,h4");
+      if (h && h.textContent.trim()) text = h.textContent.trim().replace(/\s+/g, " ");
+      if (!text || text.length < 2) continue;
+      if (text.length > 120) text = text.slice(0, 117) + "…";
+      const key = href.split("#")[0] + "||" + text.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const s2id = stampId(a, "lnk", out.length);
+      out.push({
+        id: snakeCase(text).slice(0, 40) || `link_${out.length + 1}`,
+        label: text,
+        href,
+        selector: preferredSelector(a, s2id),
+      });
+    }
+    // Ensure unique ids
+    const used = new Set();
+    for (const t of out) {
+      let id = t.id;
+      let n = 2;
+      while (used.has(id)) id = `${t.id}_${n++}`;
+      used.add(id);
+      t.id = id;
+    }
+    return out;
+  }
+
+  function discoverClickLinkTool(prefix, usedNames) {
+    const targets = collectNavigableLinks(MAX_LINKS_ENUM);
+    if (!targets.length) return null;
+    const toolName = uniqueName(`${prefix}_click_link`, usedNames);
+    const sample = targets
+      .slice(0, 8)
+      .map((t) => t.label)
+      .join("; ");
+    return {
+      id: "click_link",
+      selector: null,
+      toolName,
+      toolDescription: `Click a visible link on this page by name or URL substring (${targets.length} links indexed). Examples: ${sample}${targets.length > 8 ? "; …" : ""}`,
+      kind: "click_link",
+      buttonText: "Click link",
+      confirm: false,
+      readOnly: false,
+      inputSchema: {
+        type: "object",
+        properties: {
+          text: {
+            type: "string",
+            description: "Link text / title substring to click (preferred).",
+          },
+          href: {
+            type: "string",
+            description: "Optional URL substring to disambiguate.",
+          },
+          link: {
+            type: "string",
+            enum: targets.map((t) => t.id),
+            description: "Optional explicit link id from the indexed set.",
+          },
+        },
+        additionalProperties: false,
+      },
+      targets,
+    };
+  }
+
+  function discoverFindInPageTool(prefix, usedNames) {
+    const body = document.body;
+    if (!body) return null;
+    const sample = (body.innerText || "").trim();
+    if (sample.length < 40) return null;
+    const toolName = uniqueName(`${prefix}_find_in_page`, usedNames);
+    return {
+      id: "find_in_page",
+      selector: null,
+      toolName,
+      toolDescription:
+        "Search visible text on this page and return matching snippets (no full DOM dump). Optionally scroll the first match into view.",
+      kind: "find_in_page",
+      buttonText: "Find in page",
+      confirm: false,
+      readOnly: true,
+      inputSchema: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "Case-insensitive substring to find in page text.",
+          },
+          max_results: {
+            type: "number",
+            description: "Max snippets to return (default 5, max 15).",
+          },
+          scroll: {
+            type: "boolean",
+            description: "If true, scroll the first match into view.",
+          },
+        },
+        required: ["query"],
+        additionalProperties: false,
+      },
+      targets: [],
+    };
+  }
+
   /**
    * Post-discovery dedupe: collapse equivalent tools after they're found.
    * Prefer fill_submit search over declarative search forms; one list_products;
@@ -1246,14 +1372,19 @@
     // Imperative fill+submit search when a search box exists (may duplicate form search;
     // dedupeDiscoveredTools collapses them afterward).
     const fill = discoverSearchFillSubmit(prefix, usedNames);
-    if (fill) {
-      // stash on a side list; merge after grouping
-    }
 
     const remaining = Math.max(0, opts.maxTools - forms.length);
     const actions = buildGroupedActions(rawMatches, usedNames, prefix, remaining);
-    if (fill) {
-      actions.unshift(fill);
+    if (fill) actions.unshift(fill);
+
+    // Universal navigation / page-search primitives (DOM-gated)
+    const clickLink = discoverClickLinkTool(prefix, usedNames);
+    if (clickLink && forms.length + actions.length < opts.maxTools) {
+      actions.push(clickLink);
+    }
+    const findInPage = discoverFindInPageTool(prefix, usedNames);
+    if (findInPage && forms.length + actions.length < opts.maxTools) {
+      actions.push(findInPage);
     }
 
     const deduped = dedupeDiscoveredTools(forms, actions);
@@ -1347,6 +1478,7 @@
     clearAnnotations,
     summarize,
     scrapeProducts,
+    collectNavigableLinks,
     isVisible,
     snakeCase,
     hostnamePrefix,

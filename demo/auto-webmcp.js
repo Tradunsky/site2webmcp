@@ -121,6 +121,44 @@
       return toolResult({ ok: true, q: query, href: location.href });
     }
 
+    if (kind === "click_link") {
+      const textQ = args && args.text != null ? String(args.text).trim().toLowerCase() : "";
+      const hrefQ = args && args.href != null ? String(args.href).trim().toLowerCase() : "";
+      const linkId = args && args.link != null ? String(args.link).trim() : "";
+      const targets = action.targets || [];
+      let hit = linkId ? targets.find((x) => String(x.id) === linkId) : null;
+      if (!hit && textQ) {
+        hit = targets.find((t) => String(t.label || "").toLowerCase().includes(textQ) && (!hrefQ || String(t.href || "").toLowerCase().includes(hrefQ)));
+      }
+      if (!hit) return toolResult({ ok: false, error: "No matching link", options: targets.slice(0, 10) });
+      const el = document.querySelector(hit.selector);
+      if (!el) return toolResult({ ok: false, error: "Element missing" });
+      el.click();
+      await new Promise((r) => setTimeout(r, 50));
+      return toolResult({ ok: true, clicked: hit.label, href: hit.href });
+    }
+
+    if (kind === "find_in_page") {
+      const query = args && args.query != null ? String(args.query).trim() : "";
+      if (!query) return toolResult({ ok: false, error: "Missing query" });
+      const q = query.toLowerCase();
+      const text = document.body && document.body.innerText ? document.body.innerText : "";
+      const matches = [];
+      let from = 0;
+      const lower = text.toLowerCase();
+      const max = Math.min(15, Number(args && args.max_results) || 5);
+      while (matches.length < max) {
+        const idx = lower.indexOf(q, from);
+        if (idx < 0) break;
+        const start = Math.max(0, idx - 60);
+        const end = Math.min(text.length, idx + query.length + 60);
+        let snippet = text.slice(start, end).replace(/\s+/g, " ").trim();
+        matches.push({ snippet: (start > 0 ? "…" : "") + snippet + (end < text.length ? "…" : "") });
+        from = idx + query.length;
+      }
+      return toolResult({ ok: true, query, count: matches.length, matches });
+    }
+
     if (kind === "list_products") {
       return toolResult(listProductsPayload());
     }

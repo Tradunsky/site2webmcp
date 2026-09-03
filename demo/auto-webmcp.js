@@ -103,13 +103,27 @@
     const kind = action.kind || "click";
 
     if (kind === "fill_submit") {
-      const q = (args && (args.q || args.query || (action.fieldName && args[action.fieldName]))) || "";
-      const query = String(q || "").trim();
+      if (typeof args === "string") {
+        try { args = JSON.parse(args); } catch (_) { args = { q: args }; }
+      }
+      args = args || {};
+      const qRaw = args.q ?? args.query ?? (action.fieldName ? args[action.fieldName] : "") ?? "";
+      const query = String(qRaw).trim();
       if (!query) return toolResult({ ok: false, error: "Missing search keywords (pass q)." });
       const input = document.querySelector(action.inputSelector || action.selector);
       if (!input) return toolResult({ ok: false, error: "Search input not found" });
       input.focus();
-      input.value = query;
+      const protoSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      if (protoSet) protoSet.call(input, query);
+      else input.value = query;
+      try {
+        input.select?.();
+        document.execCommand("insertText", false, query);
+      } catch (_) {}
+      if (input.value !== query) {
+        if (protoSet) protoSet.call(input, query);
+        else input.value = query;
+      }
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
       const submit = action.submitSelector ? document.querySelector(action.submitSelector) : null;

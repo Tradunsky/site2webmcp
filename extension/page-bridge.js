@@ -41,6 +41,66 @@
     return new Promise((r) => setTimeout(r, ms));
   }
 
+  /** Parse executeTool args whether object or JSON string. */
+  function normalizeToolArgs(args) {
+    if (args == null) return {};
+    if (typeof args === "string") {
+      try {
+        const parsed = JSON.parse(args);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+      } catch (_) {}
+      return { q: args, query: args, text: args };
+    }
+    if (typeof args === "object") return args;
+    return { q: String(args) };
+  }
+
+  /**
+   * Set an input's value without String.replace pitfalls and in a way SPA
+   * listeners usually see. Never pass user text through String.prototype.replace
+   * as the replacement pattern ($60 → 0 because $6 is a group reference).
+   */
+  function setInputValue(input, raw) {
+    const value = raw == null ? "" : String(raw);
+    input.focus();
+    const setter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      "value"
+    )?.set;
+    const areaSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype,
+      "value"
+    )?.set;
+    const use =
+      input instanceof HTMLTextAreaElement
+        ? areaSetter
+        : setter;
+    if (use) use.call(input, value);
+    else input.value = value;
+
+    // Select-all + insertText helps some controlled fields keep punctuation like $
+    try {
+      input.select?.();
+      const ok = document.execCommand("insertText", false, value);
+      if (!ok) {
+        if (use) use.call(input, value);
+        else input.value = value;
+      }
+    } catch (_) {
+      if (use) use.call(input, value);
+      else input.value = value;
+    }
+
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    try {
+      input.dispatchEvent(
+        new InputEvent("input", { bubbles: true, data: value, inputType: "insertText" })
+      );
+    } catch (_) {}
+    return input.value;
+  }
+
   function demoCart() {
     try {
       if (window.DemoShop && typeof DemoShop.getCart === "function") return DemoShop.getCart();
@@ -123,6 +183,7 @@
   }
 
   async function executeAction(action, args) {
+    args = normalizeToolArgs(args);
     const needsConfirm = !!action.confirm;
     if (needsConfirm && !(args && args.confirm === true)) {
       return toolResult({
@@ -134,10 +195,14 @@
     const kind = action.kind || "click";
 
     if (kind === "fill_submit") {
-      const q =
-        (args && (args.q || args.query || (action.fieldName && args[action.fieldName]))) ||
+      args = normalizeToolArgs(args);
+      const fieldName = action.fieldName || "";
+      const qRaw =
+        args.q ??
+        args.query ??
+        (fieldName ? args[fieldName] : undefined) ??
         "";
-      const query = String(q || "").trim();
+      const query = String(qRaw).trim();
       if (!query) {
         return toolResult({ ok: false, error: "Missing search keywords (pass q)." });
       }
@@ -145,14 +210,11 @@
       if (!input) {
         return toolResult({ ok: false, error: `Search input not found: ${action.inputSelector}` });
       }
-      input.focus();
-      input.value = query;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-      // Amazon listens to InputEvent in some builds
-      try {
-        input.dispatchEvent(new InputEvent("input", { bubbles: true, data: query }));
-      } catch (_) {}
+      const applied = setInputValue(input, query);
+      if (applied !== query) {
+        // Last resort: assign again if the site mutated $ / punctuation away
+        setInputValue(input, query);
+      }
 
       const submit = action.submitSelector
         ? document.querySelector(action.submitSelector)
@@ -176,6 +238,7 @@
       return toolResult({
         ok: true,
         q: query,
+        valueInBox: input.value,
         inputSelector: action.inputSelector,
         href: location.href,
         title: document.title,

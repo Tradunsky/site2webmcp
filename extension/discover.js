@@ -182,7 +182,7 @@
       );
     }
     if (input.id) {
-      const lab = document.querySelector(`label[for="${CSS.escape(input.id)}"]`);
+      const lab = document.querySelector(`label[for="${cssEscape(input.id)}"]`);
       if (lab) return lab.textContent.trim();
     }
     return input.name || input.type || "field";
@@ -604,8 +604,12 @@
   }
 
   function cssEscape(s) {
-    if (typeof CSS !== "undefined" && CSS.escape) return CSS.escape(s);
-    return String(s).replace(/"/g, '\\"');
+    try {
+      if (typeof CSS !== "undefined" && CSS && typeof CSS.escape === "function") {
+        return CSS.escape(s);
+      }
+    } catch (_) {}
+    return String(s).replace(/[^a-zA-Z0-9_-]/g, (ch) => "\\" + ch);
   }
 
   function candidateText(el) {

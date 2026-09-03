@@ -5,10 +5,9 @@ const $ = (id) => document.getElementById(id);
 const AGENT_PROMPT = `You are using WebMCP site tools on the page I have open.
 
 1. List the available site tools (Site tools / modelContext).
-2. Call the search tool for "kettle".
-3. Call add_to_cart with product "kettle" or "Electric Kettle".
-4. Call view_cart (or equivalent) and report the cart.
-5. Do not click around the UI manually if a site tool exists for the step.`;
+2. Prefer page tools over clicking the UI manually.
+3. If search exists, try a short query; if click_link exists, open a relevant result.
+4. Report which tools you used and what changed on the page.`;
 
 const DEBUG_SNIPPET = `const ctx = document.modelContext ?? navigator.modelContext;
 if (!ctx) {
@@ -25,7 +24,10 @@ async function activeTab() {
 }
 
 function renderSummary(summary, tab) {
-  const host = (summary && summary.hostname) || (tab && new URL(tab.url || "about:blank").hostname) || "—";
+  const host =
+    (summary && summary.hostname) ||
+    (tab && tab.url ? new URL(tab.url).hostname : null) ||
+    "—";
   $("hostname").textContent = host;
   const tools = (summary && summary.tools) || [];
   $("count").textContent = String(tools.length);
@@ -42,7 +44,7 @@ function renderSummary(summary, tab) {
   if (!tools.length) {
     const li = document.createElement("li");
     li.className = "empty";
-    li.textContent = "Open a page with forms or Add to cart / Checkout buttons.";
+    li.textContent = "Open a page with forms, search, or primary actions.";
     ul.appendChild(li);
     return;
   }
@@ -68,12 +70,15 @@ async function refresh() {
     if (res && res.summary) {
       renderSummary(res.summary, tab);
     } else {
-      // Trigger a rescan if content script has no summary yet
       const scanned = await chrome.tabs.sendMessage(tab.id, { type: "rescan" });
       renderSummary((scanned && scanned.summary) || { tools: [] }, tab);
     }
   } catch (err) {
-    $("hostname").textContent = new URL(tab.url).hostname;
+    try {
+      $("hostname").textContent = new URL(tab.url).hostname;
+    } catch (_) {
+      $("hostname").textContent = "—";
+    }
     $("status").textContent = "Content script not ready — reload the page.";
     $("tools").innerHTML = `<li class="empty">${String(err.message || err)}</li>`;
   }
@@ -100,23 +105,7 @@ $("enabled").addEventListener("change", async () => {
       const res = await chrome.tabs.sendMessage(tab.id, { type: "set-enabled", enabled });
       renderSummary((res && res.summary) || { tools: [], enabled }, tab);
     } catch (_) {
-      $("copy-agent").addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(AGENT_PROMPT);
-    $("status").textContent = "Agent prompt copied — paste into ChatGPT/Codex on this page.";
-  } catch (_) {
-    $("status").textContent = "Clipboard failed.";
-  }
-});
-
-$("open-docs").addEventListener("click", (e) => {
-  e.preventDefault();
-  // Packaged docs path: users load from repo; open GitHub-style file via extension resource
-  const url = chrome.runtime.getURL("CONNECT_AGENT.md");
-  chrome.tabs.create({ url });
-});
-
-refresh();
+      refresh();
     }
   }
 });
@@ -126,14 +115,14 @@ $("copy").addEventListener("click", async () => {
     await navigator.clipboard.writeText(DEBUG_SNIPPET);
     $("status").textContent = "Debug snippet copied — paste in the page DevTools console.";
   } catch (_) {
-    $("status").textContent = "Clipboard failed — select snippet from README.";
+    $("status").textContent = "Clipboard failed — see docs/CONNECT_AGENT.md.";
   }
 });
 
 $("copy-agent").addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(AGENT_PROMPT);
-    $("status").textContent = "Agent prompt copied — paste into ChatGPT/Codex on this page.";
+    $("status").textContent = "Agent prompt copied.";
   } catch (_) {
     $("status").textContent = "Clipboard failed.";
   }
@@ -141,7 +130,6 @@ $("copy-agent").addEventListener("click", async () => {
 
 $("open-docs").addEventListener("click", (e) => {
   e.preventDefault();
-  // Packaged docs path: users load from repo; open GitHub-style file via extension resource
   const url = chrome.runtime.getURL("CONNECT_AGENT.md");
   chrome.tabs.create({ url });
 });

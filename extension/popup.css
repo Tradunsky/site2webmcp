@@ -90,3 +90,18 @@ button:hover { filter: brightness(1.08); }
 footer { margin-top: 12px; color: var(--muted); font-size: 11px; }
 code { font-size: 10px; }
 .empty { padding: 14px; color: var(--muted); font-size: 12px; text-align: center; }
+
+.connect {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.connect .hint { font-size: 11px; color: var(--muted); line-height: 1.4; margin: 0 0 8px; }
+.connect .steps { margin: 0 0 10px; padding-left: 18px; font-size: 11px; color: var(--text); line-height: 1.45; }
+.connect .steps li { margin-bottom: 8px; }
+.connect .steps code { font-size: 10px; }
+#copy-agent { width: 100%; margin-top: 0; }
+footer a { color: var(--accent); }
+body { max-height: 560px; overflow: auto; }

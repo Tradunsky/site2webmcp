@@ -13,6 +13,12 @@ Site2WebMCP scans the live DOM and registers tools two ways:
 
 Agents then discover tools with `getTools()` and run them through the browser-mediated WebMCP APIs.
 
+## Connect an AI agent
+
+WebMCP is **in-page**, not a classic MCP connector. See **[docs/CONNECT_AGENT.md](docs/CONNECT_AGENT.md)** (also in the extension popup under **Connect an agent**).
+
+Short version: open the demo in **ChatGPT desktop’s built-in browser** with model **Sol/Terra**, use **Site tools**, or debug in Chrome with the WebMCP flag + DevTools.
+
 ## Quick start (5 steps)
 
 ### 1. Enable WebMCP in Chrome

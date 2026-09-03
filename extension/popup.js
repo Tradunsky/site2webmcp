@@ -2,6 +2,14 @@
 
 const $ = (id) => document.getElementById(id);
 
+const AGENT_PROMPT = `You are using WebMCP site tools on the page I have open.
+
+1. List the available site tools (Site tools / modelContext).
+2. Call the search tool for "kettle".
+3. Call add_to_cart with product "kettle" or "Electric Kettle".
+4. Call view_cart (or equivalent) and report the cart.
+5. Do not click around the UI manually if a site tool exists for the step.`;
+
 const DEBUG_SNIPPET = `const ctx = document.modelContext ?? navigator.modelContext;
 if (!ctx) {
   console.warn("WebMCP not available — enable chrome://flags/#enable-webmcp-testing and use HTTPS or localhost");
@@ -92,7 +100,23 @@ $("enabled").addEventListener("change", async () => {
       const res = await chrome.tabs.sendMessage(tab.id, { type: "set-enabled", enabled });
       renderSummary((res && res.summary) || { tools: [], enabled }, tab);
     } catch (_) {
-      refresh();
+      $("copy-agent").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(AGENT_PROMPT);
+    $("status").textContent = "Agent prompt copied — paste into ChatGPT/Codex on this page.";
+  } catch (_) {
+    $("status").textContent = "Clipboard failed.";
+  }
+});
+
+$("open-docs").addEventListener("click", (e) => {
+  e.preventDefault();
+  // Packaged docs path: users load from repo; open GitHub-style file via extension resource
+  const url = chrome.runtime.getURL("CONNECT_AGENT.md");
+  chrome.tabs.create({ url });
+});
+
+refresh();
     }
   }
 });
@@ -104,6 +128,22 @@ $("copy").addEventListener("click", async () => {
   } catch (_) {
     $("status").textContent = "Clipboard failed — select snippet from README.";
   }
+});
+
+$("copy-agent").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(AGENT_PROMPT);
+    $("status").textContent = "Agent prompt copied — paste into ChatGPT/Codex on this page.";
+  } catch (_) {
+    $("status").textContent = "Clipboard failed.";
+  }
+});
+
+$("open-docs").addEventListener("click", (e) => {
+  e.preventDefault();
+  // Packaged docs path: users load from repo; open GitHub-style file via extension resource
+  const url = chrome.runtime.getURL("CONNECT_AGENT.md");
+  chrome.tabs.create({ url });
 });
 
 refresh();

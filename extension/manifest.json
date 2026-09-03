@@ -3,8 +3,15 @@
   "name": "Site2WebMCP",
   "version": "0.1.0",
   "description": "Discover page forms and actions, expose them as WebMCP tools for AI agents.",
-  "permissions": ["scripting", "storage", "activeTab"],
-  "host_permissions": ["http://*/*", "https://*/*"],
+  "permissions": [
+    "scripting",
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
@@ -24,16 +31,29 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["lib/discover.js", "content.js"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "lib/discover.js",
+        "content.js"
+      ],
       "run_at": "document_idle",
       "all_frames": false
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["page-bridge.js", "lib/discover.js"],
-      "matches": ["http://*/*", "https://*/*"]
+      "resources": [
+        "CONNECT_AGENT.md",
+        "lib/discover.js",
+        "page-bridge.js"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
     }
   ]
 }

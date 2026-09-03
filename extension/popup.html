@@ -7,37 +7,44 @@
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <span class="logo" aria-hidden="true">◎</span>
-      <div>
-        <h1>Site2WebMCP</h1>
-        <p class="sub">DOM → WebMCP tools</p>
+  <div id="home" class="view">
+    <header>
+      <div class="brand">
+        <span class="logo" aria-hidden="true">◎</span>
+        <div>
+          <h1>Site2WebMCP</h1>
+          <p class="sub">DOM → WebMCP tools</p>
+        </div>
       </div>
-    </div>
-    <label class="toggle" title="Enable or disable on this browser">
-      <input type="checkbox" id="enabled" checked />
-      <span>Enabled</span>
-    </label>
-  </header>
+    </header>
 
-  <section class="meta">
-    <div id="hostname" class="hostname">—</div>
-    <div id="status" class="status">Scanning…</div>
-  </section>
+    <section class="meta">
+      <div id="hostname" class="hostname">—</div>
+      <div id="status" class="status">Scanning…</div>
+    </section>
 
-  <section>
-    <h2>Tools <span id="count" class="pill">0</span></h2>
-    <ul id="tools" class="tools"></ul>
-  </section>
+    <section>
+      <h2>Tools <span id="count" class="pill">0</span></h2>
+      <ul id="tools" class="tools"></ul>
+    </section>
 
-  <section class="actions">
-    <button type="button" id="rescan">Rescan page</button>
-    <button type="button" id="copy" class="secondary">Copy debug snippet</button>
-  </section>
+    <section class="actions">
+      <button type="button" id="rescan" class="secondary">Rescan page</button>
+      <button type="button" id="copy" class="secondary">Copy debug snippet</button>
+    </section>
 
-  <details class="connect" id="connect">
-    <summary>Connect an agent</summary>
+    <button type="button" id="open-connect" class="ghost">Connect an agent</button>
+
+    <footer>
+      <p>Flag: <code>chrome://flags/#enable-webmcp-testing</code></p>
+    </footer>
+  </div>
+
+  <div id="connect-panel" class="panel" hidden>
+    <header class="panel-header">
+      <button type="button" id="close-connect" class="back">Back</button>
+      <h1>Connect an agent</h1>
+    </header>
     <div class="connect-body">
       <p class="hint">WebMCP tools live on the <strong>page</strong>, not as a separate MCP server. Prefer <strong>Codex + agent-browser</strong> (Chrome with this extension). ChatGPT’s built-in browser does not load extensions.</p>
       <ol class="steps">
@@ -48,11 +55,8 @@
       <button type="button" id="copy-agent" class="secondary">Copy agent prompt</button>
       <p class="docs-link"><a href="#" id="open-docs">Full connect guide</a></p>
     </div>
-  </details>
+  </div>
 
-  <footer>
-    <p>Flag: <code>chrome://flags/#enable-webmcp-testing</code></p>
-  </footer>
   <script src="popup.js"></script>
 </body>
 </html>

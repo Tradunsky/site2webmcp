@@ -133,6 +133,55 @@
 
     const kind = action.kind || "click";
 
+    if (kind === "fill_submit") {
+      const q =
+        (args && (args.q || args.query || (action.fieldName && args[action.fieldName]))) ||
+        "";
+      const query = String(q || "").trim();
+      if (!query) {
+        return toolResult({ ok: false, error: "Missing search keywords (pass q)." });
+      }
+      const input = document.querySelector(action.inputSelector || action.selector);
+      if (!input) {
+        return toolResult({ ok: false, error: `Search input not found: ${action.inputSelector}` });
+      }
+      input.focus();
+      input.value = query;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      // Amazon listens to InputEvent in some builds
+      try {
+        input.dispatchEvent(new InputEvent("input", { bubbles: true, data: query }));
+      } catch (_) {}
+
+      const submit = action.submitSelector
+        ? document.querySelector(action.submitSelector)
+        : null;
+      const form = action.formSelector
+        ? document.querySelector(action.formSelector)
+        : input.form || input.closest("form");
+
+      if (submit) {
+        submit.click();
+      } else if (form && typeof form.requestSubmit === "function") {
+        form.requestSubmit();
+      } else if (form) {
+        form.submit();
+      } else {
+        input.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "Enter", code: "Enter", keyCode: 13, bubbles: true })
+        );
+      }
+      await delay(100);
+      return toolResult({
+        ok: true,
+        q: query,
+        inputSelector: action.inputSelector,
+        href: location.href,
+        title: document.title,
+      });
+    }
+
     if (kind === "list_products") {
       return toolResult(listProductsPayload());
     }

@@ -102,6 +102,25 @@
 
     const kind = action.kind || "click";
 
+    if (kind === "fill_submit") {
+      const q = (args && (args.q || args.query || (action.fieldName && args[action.fieldName]))) || "";
+      const query = String(q || "").trim();
+      if (!query) return toolResult({ ok: false, error: "Missing search keywords (pass q)." });
+      const input = document.querySelector(action.inputSelector || action.selector);
+      if (!input) return toolResult({ ok: false, error: "Search input not found" });
+      input.focus();
+      input.value = query;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      const submit = action.submitSelector ? document.querySelector(action.submitSelector) : null;
+      const form = action.formSelector ? document.querySelector(action.formSelector) : input.form;
+      if (submit) submit.click();
+      else if (form && form.requestSubmit) form.requestSubmit();
+      else if (form) form.submit();
+      await new Promise((r) => setTimeout(r, 100));
+      return toolResult({ ok: true, q: query, href: location.href });
+    }
+
     if (kind === "list_products") {
       return toolResult(listProductsPayload());
     }

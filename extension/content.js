@@ -35,9 +35,13 @@
       buttonText: a.buttonText,
       confirm: a.confirm,
       kind: a.kind,
+      readOnly: a.readOnly,
       inputSchema: a.inputSchema,
-      targets: a.targets || [],
-      readOnly: !!a.readOnly,
+      targets: a.targets,
+      fieldName: a.fieldName,
+      inputSelector: a.inputSelector,
+      formSelector: a.formSelector,
+      submitSelector: a.submitSelector,
     }));
   }
 

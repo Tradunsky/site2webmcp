@@ -199,13 +199,108 @@
   }
 
   function looksLikeSearchForm(form) {
+    if (!form) return false;
+    const id = (form.id || "").toLowerCase();
+    const action = (form.getAttribute("action") || "").toLowerCase();
     if (form.getAttribute("role") === "search") return true;
-    if ((form.getAttribute("action") || "").toLowerCase().includes("search")) return true;
+    if (id.includes("nav-search") || id === "nav-search-bar-form") return true;
+    if (action.includes("search") || /\/s\b/.test(action) || action.includes("field-keywords")) return true;
     if (form.querySelector('input[type="search"]')) return true;
+    if (form.querySelector("#twotabsearchtextbox, input[name=field-keywords]")) return true;
     if (form.querySelector('[name*="search" i], [id*="search" i], [placeholder*="search" i]')) return true;
     const btn = form.querySelector('button[type="submit"], input[type="submit"]');
-    if (btn && /search|find|query|go/i.test(btn.textContent || btn.value || "")) return true;
+    if (btn && /search|find|query|go/i.test(btn.textContent || btn.value || btn.getAttribute("aria-label") || "")) {
+      return true;
+    }
     return false;
+  }
+
+  function searchFormPriority(form) {
+    let score = Number(looksLikeSearchForm(form));
+    const id = (form.id || "").toLowerCase();
+    if (id === "nav-search-bar-form" || id.includes("nav-search")) score += 5;
+    if (form.querySelector("#twotabsearchtextbox, input[name=field-keywords]")) score += 3;
+    return score;
+  }
+
+  /** DOM-gated fill+submit search tool (Amazon nav search etc.) for reliable executeTool. */
+  function discoverSearchFillSubmit(prefix, usedNames) {
+    const input =
+      document.querySelector("#twotabsearchtextbox") ||
+      document.querySelector("input[name=field-keywords]") ||
+      document.querySelector(
+        "form#nav-search-bar-form input[type=text], form#nav-search-bar-form input[type=search]"
+      ) ||
+      null;
+    if (!input || !isVisible(input)) return null;
+
+    const form =
+      input.closest("form") ||
+      document.querySelector("#nav-search-bar-form") ||
+      document.querySelector("form[role=search]");
+    const submit =
+      (form &&
+        form.querySelector("#nav-search-submit-button, input[type=submit], button[type=submit]")) ||
+      document.querySelector("#nav-search-submit-button");
+
+    const inputId = input.id ? null : stampId(input, "search_in", 0);
+    const formId = form && !form.id ? stampId(form, "search_form", 0) : null;
+    const submitId = submit && !submit.id ? stampId(submit, "search_go", 0) : null;
+
+    const inputSelector = input.id
+      ? `#${cssEscape(input.id)}`
+      : `[${ID_ATTR}="${cssEscape(inputId)}"]`;
+    const formSelector = form
+      ? form.id
+        ? `#${cssEscape(form.id)}`
+        : `[${ID_ATTR}="${cssEscape(formId)}"]`
+      : null;
+    const submitSelector = submit
+      ? submit.id
+        ? `#${cssEscape(submit.id)}`
+        : `[${ID_ATTR}="${cssEscape(submitId)}"]`
+      : null;
+
+    const fieldName = (input.getAttribute("name") || "q").trim() || "q";
+    const host = (location.hostname || "").replace(/^www\./, "");
+    const isAmazon = /amazon\./i.test(host);
+    const toolName = uniqueName(`${prefix}_search_query`, usedNames);
+    const toolDescription = isAmazon
+      ? "Search this Amazon store by keyword: fill the nav search box and submit (DevTools/agent friendly)."
+      : "Fill the site search box and submit (reliable executeTool path).";
+
+    const props = {
+      q: { type: "string", description: "Search keywords" },
+      query: { type: "string", description: "Alias for q" },
+    };
+    if (fieldName !== "q" && fieldName !== "query") {
+      props[fieldName] = {
+        type: "string",
+        description: "Search keywords (site field name)",
+      };
+    }
+
+    return {
+      id: "fill_submit_search",
+      selector: inputSelector,
+      toolName,
+      toolDescription,
+      kind: "fill_submit",
+      buttonText: "Search",
+      confirm: false,
+      readOnly: false,
+      inputSchema: {
+        type: "object",
+        properties: props,
+        required: ["q"],
+        additionalProperties: false,
+      },
+      fieldName,
+      inputSelector,
+      formSelector,
+      submitSelector,
+      targets: [],
+    };
   }
 
   function looksLikeLoginForm(form) {
@@ -252,6 +347,9 @@
   }
 
   function describeForm(form, action) {
+    if (action === "search" && /amazon\./i.test(location.hostname || "")) {
+      return "Search Amazon products by keyword using the site search box.";
+    }
     const aria = form.getAttribute("aria-label");
     if (aria) return aria.trim().slice(0, 160);
     const heading = nearbyHeading(form);
@@ -895,7 +993,7 @@
     let productDetailsCount = 0;
 
     const allForms = Array.from(document.querySelectorAll("form")).filter(isVisible);
-    allForms.sort((a, b) => Number(looksLikeSearchForm(b)) - Number(looksLikeSearchForm(a)));
+    allForms.sort((a, b) => searchFormPriority(b) - searchFormPriority(a));
 
     for (const form of allForms) {
       if (forms.length >= opts.maxTools) break;
@@ -1040,6 +1138,12 @@
 
     const remaining = Math.max(0, opts.maxTools - forms.length);
     const actions = buildGroupedActions(rawMatches, usedNames, prefix, remaining);
+
+    // Reliable search executeTool path (Amazon nav search etc.) — only if DOM has a search box
+    if (forms.length + actions.length < opts.maxTools) {
+      const fill = discoverSearchFillSubmit(prefix, usedNames);
+      if (fill) actions.unshift(fill);
+    }
 
     return {
       hostname: location.hostname || "localhost",

@@ -38,7 +38,7 @@
 
   <section class="connect" id="connect">
     <h2>Connect an agent</h2>
-    <p class="hint">WebMCP tools live on the <strong>page</strong>, not as a separate MCP server. The agent must open this tab’s URL in a WebMCP-capable browser.</p>
+    <p class="hint"><strong>Video path:</strong> live Amazon + DevTools/Inspector <code>executeTool</code> (see repo <code>docs/VIDEO_AMAZON.md</code>). WebMCP tools live on the <strong>page</strong>, not as a separate MCP server. The agent must open this tab’s URL in a WebMCP-capable browser.</p>
     <ol class="steps">
       <li><strong>ChatGPT / Codex (real agent)</strong> — Desktop app → built-in browser → open this page (demo: <code>http://localhost:8765</code> or a public HTTPS URL). Use model <strong>GPT-5.6 Sol or Terra</strong> (not Luna). Click <em>Site tools</em> in the address bar; ask e.g. “list site tools, then search for kettle and add Electric Kettle to cart.” Extension does <em>not</em> run inside ChatGPT’s browser — use the demo’s built-in auto-WebMCP (or host that page).</li>
       <li><strong>Chrome (manual / Inspector)</strong> — Enable <code>chrome://flags/#enable-webmcp-testing</code>, reload this page with Site2WebMCP on, install “WebMCP - Model Context Tool Inspector”, or paste the debug snippet in DevTools.</li>

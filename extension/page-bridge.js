@@ -115,7 +115,7 @@
     // Lightweight DOM scrape when discover.js is not in MAIN world
     const cards = Array.from(
       document.querySelectorAll(
-        ".card, [data-asin], .product, .product-card, .product-tile, [data-component-type='s-search-result'], .s-result-item"
+        ".card, .product, .product-card, .product-tile, [data-product-id], [data-asin], [data-sku], [data-component-type='s-search-result'], .s-result-item, [itemtype*='Product' i]"
       )
     );
     const out = [];
@@ -135,7 +135,7 @@
       const key = id || name.toLowerCase();
       if (seen.has(key)) continue;
       seen.add(key);
-      const priceEl = card.querySelector(".price, .a-price .a-offscreen, [itemprop='price']");
+      const priceEl = card.querySelector(".price, .product-price, .a-price .a-offscreen, [itemprop='price']");
       const price = priceEl ? priceEl.textContent.trim().replace(/\s+/g, " ").slice(0, 24) : null;
       const catEl = card.querySelector(".meta, .category, [itemprop='category']");
       const category = catEl ? catEl.textContent.trim().replace(/\s+/g, " ").slice(0, 40) : undefined;

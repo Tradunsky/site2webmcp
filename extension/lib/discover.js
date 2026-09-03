@@ -89,6 +89,7 @@
     { re: /delete|remove\s*item|remove\s*from/i, action: "delete", label: "Delete / remove" },
   ];
 
+  // Generic commerce CTA hints (stable ids/attrs sites often use).
   const COMMERCE_HOOK_SELECTORS = [
     "#add-to-cart-button",
     "#buy-now-button",
@@ -102,6 +103,7 @@
     "[data-asin]",
   ].join(", ");
 
+  // Generic product-card hints (common ecom markup; not hostname-gated).
   const PRODUCT_CARD_SELECTORS = [
     ".card",
     "[data-asin]",
@@ -223,25 +225,69 @@
     return score;
   }
 
-  /** DOM-gated fill+submit search tool (Amazon nav search etc.) for reliable executeTool. */
+  /** DOM-gated fill+submit search tool (nav search box) for reliable executeTool. */
+  // Optional DOM hints (any site). Not hostname-gated — just common search chrome.
+  const SEARCH_INPUT_HINTS = [
+    'input[type="search"]',
+    'input[name="q"]',
+    'input[name="query"]',
+    'input[name="search"]',
+    'input[name*="search" i]',
+    'input[id*="search" i]',
+    'input[name="field-keywords"]',
+    "#twotabsearchtextbox",
+    'form[role="search"] input[type="text"]',
+    'form[role="search"] input[type="search"]',
+    'form[id*="search" i] input[type="text"]',
+    'form[id*="search" i] input[type="search"]',
+    "#nav-search-bar-form input[type=text]",
+    "#nav-search-bar-form input[type=search]",
+  ];
+
+  const SEARCH_FORM_HINTS = [
+    'form[role="search"]',
+    "form#nav-search-bar-form",
+    'form[id*="search" i]',
+    'form[action*="search" i]',
+  ];
+
+  const SEARCH_SUBMIT_HINTS = [
+    "#nav-search-submit-button",
+    'button[type="submit"]',
+    'input[type="submit"]',
+    'button[aria-label*="search" i]',
+  ];
+
+  function firstMatch(selectors, root) {
+    const scope = root || document;
+    for (const sel of selectors) {
+      try {
+        const el = scope.querySelector(sel);
+        if (el) return el;
+      } catch (_) {}
+    }
+    return null;
+  }
+
   function discoverSearchFillSubmit(prefix, usedNames) {
-    const input =
-      document.querySelector("#twotabsearchtextbox") ||
-      document.querySelector("input[name=field-keywords]") ||
-      document.querySelector(
-        "form#nav-search-bar-form input[type=text], form#nav-search-bar-form input[type=search]"
-      ) ||
-      null;
+    let input = firstMatch(SEARCH_INPUT_HINTS);
+    if (input && !isVisible(input)) input = null;
+    // Prefer a visible search-looking input inside a search form
+    if (!input) {
+      const formHint = firstMatch(SEARCH_FORM_HINTS);
+      if (formHint) {
+        input = formHint.querySelector(
+          'input[type="search"], input[type="text"], input:not([type])'
+        );
+        if (input && !isVisible(input)) input = null;
+      }
+    }
     if (!input || !isVisible(input)) return null;
 
-    const form =
-      input.closest("form") ||
-      document.querySelector("#nav-search-bar-form") ||
-      document.querySelector("form[role=search]");
+    const form = input.closest("form") || firstMatch(SEARCH_FORM_HINTS);
     const submit =
-      (form &&
-        form.querySelector("#nav-search-submit-button, input[type=submit], button[type=submit]")) ||
-      document.querySelector("#nav-search-submit-button");
+      (form && firstMatch(SEARCH_SUBMIT_HINTS, form)) ||
+      firstMatch(SEARCH_SUBMIT_HINTS);
 
     const inputId = input.id ? null : stampId(input, "search_in", 0);
     const formId = form && !form.id ? stampId(form, "search_form", 0) : null;
@@ -262,12 +308,9 @@
       : null;
 
     const fieldName = (input.getAttribute("name") || "q").trim() || "q";
-    const host = (location.hostname || "").replace(/^www\./, "");
-    const isAmazon = /amazon\./i.test(host);
     const toolName = uniqueName(`${prefix}_search_query`, usedNames);
-    const toolDescription = isAmazon
-      ? "Search this Amazon store by keyword: fill the nav search box and submit (DevTools/agent friendly)."
-      : "Fill the site search box and submit (reliable executeTool path).";
+    const toolDescription =
+      "Fill the site search box and submit (reliable executeTool path).";
 
     const props = {
       q: { type: "string", description: "Search keywords" },
@@ -347,9 +390,6 @@
   }
 
   function describeForm(form, action) {
-    if (action === "search" && /amazon\./i.test(location.hostname || "")) {
-      return "Search Amazon products by keyword using the site search box.";
-    }
     const aria = form.getAttribute("aria-label");
     if (aria) return aria.trim().slice(0, 160);
     const heading = nearbyHeading(form);
@@ -996,7 +1036,7 @@
       if (added >= limit) break;
       const link =
         card.querySelector(
-          'h2 a[href], h3 a[href], a.a-link-normal[href*="/dp/"], a[href*="/dp/"], a[href*="/gp/product/"], a.product-link[href], a[href][data-asin]'
+          'h2 a[href], h3 a[href], a.product-link[href], a[href*="/dp/"], a[href*="/gp/product/"], a[href*="/product/"], a[href*="/products/"], a.a-link-normal[href], a[href][data-asin], a[href][data-product-id]'
         ) || null;
       if (!link || !isVisible(link)) continue;
       const href = link.getAttribute("href") || "";

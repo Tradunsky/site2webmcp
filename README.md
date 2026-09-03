@@ -17,7 +17,7 @@ Agents then discover tools with `getTools()` and run them through the browser-me
 
 WebMCP is **in-page**, not a classic MCP connector. See **[docs/CONNECT_AGENT.md](docs/CONNECT_AGENT.md)** (also in the extension popup under **Connect an agent**).
 
-Short version: open the demo in **ChatGPT desktop’s built-in browser** with model **Sol/Terra**, use **Site tools**, or debug in Chrome with the WebMCP flag + DevTools.
+Short version: for live sites (Amazon), point **Codex at agent-browser/Chrome** with the extension loaded; or debug with WebMCP flag + DevTools. ChatGPT’s built-in browser only sees tools the page itself registers (e.g. demo `auto-webmcp.js`).
 
 ## Quick start (5 steps)
 

@@ -1,6 +1,12 @@
 # Video: Amazon search happy path (1–2 min)
 
-Marketing shot list alignment. **Do not claim Codex/ChatGPT drove Amazon** — extension does not run in ChatGPT’s in-app browser. Climax = Chrome DevTools or Model Context Tool Inspector `executeTool`.
+Marketing shot list alignment.
+
+**Preferred climax:** Codex using **agent-browser** (Chrome with Site2WebMCP loaded) on Amazon — Slava confirmed this works.
+
+**Backup climax:** DevTools / Model Context Tool Inspector `executeTool`.
+
+**Still true:** ChatGPT’s *built-in* browser does not load the Chrome extension; don’t imply that path. Do imply Codex + agent-browser + extension.
 
 ## Prep (off camera)
 
@@ -16,11 +22,18 @@ Marketing shot list alignment. **Do not claim Codex/ChatGPT drove Amazon** — e
 | 0:00–0:08 | Title card Site2WebMCP |
 | 0:08–0:24 | Amazon.ca + extension popup showing tools (search / search_query / cart) |
 | 0:24–0:32 | Highlight nav search form / tool chips |
-| 0:32–0:48 | DevTools → `executeTool` search → results update (**no mouse in search box**) |
+| 0:32–0:48 | **Codex + agent-browser** lists tools → search workflow → SERP updates (backup: DevTools `executeTool`) |
 | 0:48–0:56 | Optional: site has no first-party WebMCP, tools still present |
 | 0:56–1:12 | End card |
 
 Prefer **search** over add-to-cart (login/CAPTCHA risk).
+
+## Codex + agent-browser
+
+1. Chrome has WebMCP flag + unpacked Site2WebMCP.
+2. Tell Codex to use **agent-browser** (not the ChatGPT built-in browser).
+3. Open Amazon.ca in that Chrome session; ask Codex to list WebMCP/site tools and search (e.g. electric kettle).
+4. On camera: show Codex turn + Amazon updating — zero site-authored WebMCP.
 
 ## DevTools snippets (page console on amazon.ca)
 

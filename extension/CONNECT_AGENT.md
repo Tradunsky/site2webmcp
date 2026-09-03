@@ -2,11 +2,16 @@
 
 WebMCP tools are **bound to the web page** in the agent’s browser tab. There is no separate MCP server URL to paste into Cursor/Claude connector settings.
 
+## Codex + agent-browser (confirmed)
+
+Codex **can** use tools our extension registers on live sites (e.g. Amazon) if it drives **agent-browser** / Chrome where the extension is loaded. It **cannot** see those tools in ChatGPT’s built-in browser (extensions don’t run there).
+
 ## What works today
 
 | Client | How tools appear | Notes |
 |--------|------------------|-------|
-| **ChatGPT desktop → built-in browser** (Work / Codex) | Automatic **Site tools** on the open page | Use **GPT-5.6 Sol or Terra** (not Luna). Not Enterprise/Edu. |
+| **Codex + agent-browser (Chrome + extension)** | Page WebMCP from Site2WebMCP | **Confirmed** on Amazon.ca. Prefer this for live-site demos. |
+| **ChatGPT desktop → built-in browser** | Site tools only if the **page** registers them | Extension does **not** load here. Use demo `auto-webmcp.js` or site-native WebMCP. Sol/Terra. |
 | **Chrome + WebMCP flag** | DevTools / Model Context Tool Inspector | Great for debugging; not a full agent loop unless you drive it. |
 | **Classic MCP connectors** (stdio / SSE / Cursor MCP) | **Do not see** these tools | Different protocol surface. |
 
@@ -64,4 +69,4 @@ console.table((await ctx.getTools()).map(t => ({ name: t.name, description: t.de
 
 ## Checkpoint
 
-Code restore point for this architecture discussion: git commit `0605632` on branch `master` (“Checkpoint: DOM→WebMCP Chrome extension + demo shop”). Agent-connect docs land in the following commit.
+Code restore point for this architecture discussion: git commit `0605632` on branch `master` (“Checkpoint: DOM→WebMCP Chrome extension + demo shop”). Agent-connect docs land in the this docs tree + extension popup.

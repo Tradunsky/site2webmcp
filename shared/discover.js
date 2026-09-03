@@ -113,10 +113,6 @@
     "[data-product-id]",
   ].join(", ");
 
-  function isAmazonHost() {
-    return /amazon\./i.test(location.hostname || "");
-  }
-
   function hostnamePrefix() {
     try {
       const h = (location.hostname || "local").replace(/^www\./, "");
@@ -985,6 +981,107 @@
   }
 
   /**
+   * From product-like cards, pick the primary title/detail link so agents can
+   * open a product (grouped later into one tool + product enum).
+   */
+  function collectProductOpenMatches(rawMatches, usedActionKeys, limit) {
+    const cards = findProductCards();
+    let added = 0;
+    const openPat = ACTION_PATTERNS.find((p) => p.action === "product_details") || {
+      action: "product_details",
+      label: "Product details",
+    };
+
+    for (const card of cards) {
+      if (added >= limit) break;
+      const link =
+        card.querySelector(
+          'h2 a[href], h3 a[href], a.a-link-normal[href*="/dp/"], a[href*="/dp/"], a[href*="/gp/product/"], a.product-link[href], a[href][data-asin]'
+        ) || null;
+      if (!link || !isVisible(link)) continue;
+      const href = link.getAttribute("href") || "";
+      if (!href || href === "#" || href.startsWith("javascript:")) continue;
+
+      const ctxInfo = actionContext(link, "product_details");
+      const title =
+        (ctxInfo && ctxInfo.label) ||
+        titleFromNode(card) ||
+        (link.textContent || "").trim().replace(/\s+/g, " ").slice(0, 80);
+      if (!title || title.length < 3) continue;
+
+      const s2id = stampId(link, "popen", rawMatches.length + added);
+      const key = dedupeKey(link, openPat, s2id);
+      if (usedActionKeys.has(key)) continue;
+      usedActionKeys.add(key);
+
+      rawMatches.push({
+        el: link,
+        kind: "product_details",
+        matchedLabel: openPat.label,
+        s2id,
+        selector: preferredSelector(link, s2id),
+        buttonText: title.slice(0, 80),
+        contextLabel: title,
+        entityId: entityIdForTarget(link, ctxInfo || { label: title, slug: snakeCase(title) }, s2id),
+        toolDescription: null,
+      });
+      added += 1;
+    }
+    return added;
+  }
+
+  /**
+   * Post-discovery dedupe: collapse equivalent tools after they're found.
+   * Prefer fill_submit search over declarative search forms; one list_products;
+   * merge is already handled for click kinds via buildGroupedActions.
+   */
+  function dedupeDiscoveredTools(forms, actions) {
+    const outForms = forms.slice();
+    let outActions = actions.slice();
+
+    function isSearchForm(f) {
+      return f && f.action === "search";
+    }
+    function isSearchAction(a) {
+      if (!a) return false;
+      if (a.kind === "fill_submit") return true;
+      if (a.kind === "search") return true;
+      return /search/i.test(a.toolName || "") || /search/i.test(a.toolDescription || "");
+    }
+
+    const searchForms = outForms.filter(isSearchForm);
+    const searchActions = outActions.filter(isSearchAction);
+    if (searchForms.length + searchActions.length > 1) {
+      const fill = searchActions.find((a) => a.kind === "fill_submit") || searchActions[0] || null;
+      if (fill) {
+        for (const f of searchForms) {
+          const i = outForms.indexOf(f);
+          if (i >= 0) outForms.splice(i, 1);
+        }
+        outActions = outActions.filter((a) => a === fill || !isSearchAction(a));
+        if (!outActions.includes(fill)) outActions.unshift(fill);
+      } else if (searchForms.length > 1) {
+        const keep = searchForms[0];
+        for (const f of searchForms.slice(1)) {
+          const i = outForms.indexOf(f);
+          if (i >= 0) outForms.splice(i, 1);
+        }
+        // keep only `keep` among search forms — already true
+      }
+    }
+
+    let seenList = false;
+    outActions = outActions.filter((a) => {
+      if (a.kind !== "list_products") return true;
+      if (seenList) return false;
+      seenList = true;
+      return true;
+    });
+
+    return { forms: outForms, actions: outActions };
+  }
+
+  /**
    * Discover forms + primary action buttons. Returns a plan (no side effects
    * except ensureName / stampId for stable selectors).
    */
@@ -1125,13 +1222,9 @@
       });
     }
 
-    // list_products: multi-item catalog only — skip Amazon SERPs (noisy/false "catalog")
+    // list_products when multiple product-like cards exist (any site)
     const productCards = findProductCards();
-    if (
-      productCards.length >= 2 &&
-      forms.length < opts.maxTools &&
-      !isAmazonHost()
-    ) {
+    if (productCards.length >= 2 && forms.length < opts.maxTools) {
       rawMatches.unshift({
         kind: "list_products",
         matchedLabel: "List products",
@@ -1144,64 +1237,38 @@
       });
     }
 
-    // Reliable search executeTool path (Amazon nav search etc.) — only if DOM has a search box.
-    // Prefer a single search tool: if fill_submit applies, drop declarative search forms that
-    // point at the same nav search UI (avoids amazon_*_search + amazon_*_search_query dupes).
-    let fill = null;
-    if (forms.length < opts.maxTools) {
-      fill = discoverSearchFillSubmit(prefix, usedNames);
+    // Product title/detail links inside cards → later grouped as one product_details tool
+    const detailBudget = Math.max(0, MAX_PRODUCT_DETAILS - productDetailsCount);
+    if (detailBudget > 0) {
+      productDetailsCount += collectProductOpenMatches(rawMatches, usedActionKeys, detailBudget);
     }
+
+    // Imperative fill+submit search when a search box exists (may duplicate form search;
+    // dedupeDiscoveredTools collapses them afterward).
+    const fill = discoverSearchFillSubmit(prefix, usedNames);
     if (fill) {
-      const fillFormSel = fill.formSelector;
-      const filtered = forms.filter((f) => {
-        if (f.action !== "search") return true;
-        const el = document.querySelector(f.selector);
-        if (!el) return true;
-        // Drop if this form is the fill_submit form or contains the search input
-        if (fillFormSel && el.matches && el.matches(fillFormSel.replace(/\\/g, "\\"))) {
-          /* fall through to id-based checks */
-        }
-        const sameForm =
-          (fill.formSelector && el.id && fill.formSelector === `#${el.id}`) ||
-          (fill.inputSelector && el.querySelector && el.querySelector(fill.inputSelector)) ||
-          el.id === "nav-search-bar-form" ||
-          (el.id || "").includes("nav-search");
-        if (sameForm) {
-          usedNames.delete(f.toolName);
-          return false;
-        }
-        return true;
-      });
-      forms.length = 0;
-      forms.push(...filtered);
+      // stash on a side list; merge after grouping
     }
 
     const remaining = Math.max(0, opts.maxTools - forms.length);
     const actions = buildGroupedActions(rawMatches, usedNames, prefix, remaining);
-
-    if (fill && forms.length + actions.length < opts.maxTools) {
-      // Ensure name still unique after form drops
-      if (!usedNames.has(fill.toolName)) usedNames.add(fill.toolName);
+    if (fill) {
       actions.unshift(fill);
-    } else if (fill && !actions.some((a) => a.kind === "fill_submit")) {
-      // Still prefer fill_submit even if at cap: replace a list_products if present
-      const idx = actions.findIndex((a) => a.kind === "list_products");
-      if (idx >= 0) {
-        actions.splice(idx, 1);
-        actions.unshift(fill);
-      } else if (actions.length < opts.maxTools) {
-        actions.unshift(fill);
-      }
     }
+
+    const deduped = dedupeDiscoveredTools(forms, actions);
+    // mutate forms array in place for callers that hold the reference
+    forms.length = 0;
+    forms.push(...deduped.forms);
 
     return {
       hostname: location.hostname || "localhost",
       href: location.href,
       title: document.title || "",
       forms,
-      actions,
+      actions: deduped.actions,
       maxTools: opts.maxTools,
-      toolCount: forms.length + actions.length,
+      toolCount: forms.length + deduped.actions.length,
     };
   }
 

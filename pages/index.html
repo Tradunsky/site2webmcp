@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Site2WebMCP — Install</title>
+    <meta
+      name="description"
+      content="Install the Site2WebMCP agent skill and inject discover + bridge scripts so any page exposes WebMCP tools."
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0b1220;
+        --panel: #121a2b;
+        --text: #e8eefc;
+        --muted: #9db0d0;
+        --accent: #4c8dff;
+        --ok: #3dd68c;
+        --warn: #ffb020;
+        --border: #243049;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f6f8fc;
+          --panel: #ffffff;
+          --text: #0f172a;
+          --muted: #475569;
+          --border: #d7dee8;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+      main {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+      }
+      h1 { font-size: 1.75rem; margin: 0 0 0.35rem; }
+      h2 { font-size: 1.15rem; margin: 1.75rem 0 0.6rem; }
+      p.lead { color: var(--muted); margin-top: 0; }
+      a { color: var(--accent); }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1rem 1.1rem;
+        margin: 0.85rem 0;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        align-items: center;
+      }
+      button, .btn {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0.45rem 0.75rem;
+        font: inherit;
+        cursor: pointer;
+      }
+      button:hover, .btn:hover { border-color: var(--accent); }
+      code, pre {
+        font-family: var(--mono);
+        font-size: 0.85rem;
+      }
+      pre {
+        margin: 0;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 28rem;
+      }
+      #webmcp-status[data-kind="ok"] { color: var(--ok); }
+      #webmcp-status[data-kind="warn"] { color: var(--warn); }
+      #webmcp-banner {
+        border-color: var(--warn);
+        color: var(--warn);
+      }
+      ul.steps { padding-left: 1.2rem; }
+      .muted { color: var(--muted); }
+      .urls code { display: block; margin: 0.25rem 0; }
+
+      .modes {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+        margin: 1rem 0 1.25rem;
+      }
+      @media (min-width: 720px) {
+        .modes { grid-template-columns: 1fr 1fr; }
+      }
+      .mode h2 { font-size: 1.05rem; }
+      .mode .steps { margin: 0.5rem 0 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Site2WebMCP</h1>
+      <p class="lead">
+        Turn any page’s forms and actions into WebMCP tools. Pick the demo mode that matches your agent —
+        both use the same discover + bridge libraries.
+      </p>
+
+      <div class="modes">
+        <div class="card mode">
+          <h2 style="margin-top:0">Demo mode 1 — ChatGPT desktop + Skill</h2>
+          <p class="muted">Use when Chrome extensions cannot load (ChatGPT desktop / built-in browser).</p>
+          <ol class="steps">
+            <li>Open this install page in a WebMCP-capable browser (enable <code>chrome://flags/#enable-webmcp-testing</code> if needed).</li>
+            <li>Call <code>install_site2webmcp</code> (or copy the skill below) and save it as an agent skill.</li>
+            <li>On each target site, inject in order: <code>vendor/discover.js</code> → <code>vendor/page-bridge.js</code> → <code>agent-inject.js</code>.</li>
+            <li>List WebMCP tools and run the workflow (search, click_link, etc.) — prefer tools over clicking.</li>
+          </ol>
+          <div class="row">
+            <button type="button" data-copy="#skill-body">Copy skill</button>
+            <a class="btn" href="./skill.md">skill.md</a>
+          </div>
+        </div>
+        <div class="card mode">
+          <h2 style="margin-top:0">Demo mode 2 — Chrome extension + agent-browser</h2>
+          <p class="muted">Same path as the public demo video — Codex / agent-browser with the extension loaded.</p>
+          <ol class="steps">
+            <li>Enable <code>chrome://flags/#enable-webmcp-testing</code> → relaunch Chrome.</li>
+            <li>Load unpacked Site2WebMCP from this repo’s <code>extension/</code> folder (or Chrome Web Store).</li>
+            <li>Point Codex at <strong>agent-browser</strong> / Chrome with that profile (not ChatGPT’s built-in browser).</li>
+            <li>Open a live site (e.g. Amazon); list WebMCP tools and run a short workflow — no script inject needed.</li>
+          </ol>
+          <div class="row">
+            <a class="btn" href="https://www.youtube.com/watch?v=JejjEiZ4h3c">Watch demo video</a>
+            <a class="btn" href="https://github.com/Tradunsky/site2webmcp/tree/master/extension">extension/</a>
+          </div>
+        </div>
+      </div>
+
+      <div id="webmcp-banner" class="card" hidden>
+        <strong>WebMCP flag needed.</strong>
+        Enable
+        <code>chrome://flags/#enable-webmcp-testing</code>, relaunch Chrome, then reload this page.
+        Skill text below still works for copy-paste.
+      </div>
+
+      <div class="card">
+        <div id="webmcp-status" class="muted">Checking WebMCP…</div>
+        <p class="muted" style="margin-bottom: 0">
+          Agents on this page can call
+          <code>install_site2webmcp</code>,
+          <code>get_inject_snippet</code>,
+          <code>get_extension_install</code>
+          when <code>document.modelContext</code> is available.
+        </p>
+      </div>
+
+      <h2>Skill text (mode 1)</h2>
+      <div class="card">
+        <div class="row" style="margin-bottom: 0.6rem">
+          <button type="button" data-copy="#skill-body">Copy skill</button>
+          <a class="btn" href="./skill.md">skill.md</a>
+          <a class="btn" href="https://github.com/Tradunsky/site2webmcp/blob/master/skills/site2webmcp/SKILL.md"
+            >Repo SKILL.md</a
+          >
+        </div>
+        <pre id="skill-body">Loading skill…</pre>
+        <pre id="skill-fallback" hidden># Site2WebMCP
+
+Turn the current page’s forms and primary actions into WebMCP tools so you can call real site tools instead of clicking UI.
+
+## When to use
+
+Any `http(s)` page where you control a Chromium browser that supports script injection and WebMCP (`document.modelContext` / `navigator.modelContext`), including:
+
+- Codex + agent-browser / Playwright / CDP
+- ChatGPT desktop browser (script injection path — Chrome extensions do **not** load there)
+- Any agent that can evaluate JS in the page MAIN world
+
+Prefer Site2WebMCP tools over UI clicking whenever they are available.
+
+## Pages origin
+
+Install + vendor scripts live at:
+
+`https://tradunsky.github.io/site2webmcp/`
+
+## Steps (agent-controlled browser)
+
+1. **Open** the target page (`https://…` or `http://localhost`).
+2. **Ensure WebMCP** is available in that browser profile (`chrome://flags/#enable-webmcp-testing` → relaunch when using stock Chrome).
+3. **Inject three scripts in order** into the page MAIN world (evaluate / `addScriptTag` / CDP `Runtime.evaluate` with the fetched source — do not skip order):
+
+```text
+https://tradunsky.github.io/site2webmcp/vendor/discover.js
+https://tradunsky.github.io/site2webmcp/vendor/page-bridge.js
+https://tradunsky.github.io/site2webmcp/agent-inject.js
+```
+
+4. Wait briefly for `[site2webmcp] agent-inject` / page bridge console messages (or poll `window.__site2webmcp`).
+5. **List tools:**
+
+```js
+const ctx = document.modelContext ?? navigator.modelContext;
+if (!ctx) throw new Error(&quot;WebMCP unavailable&quot;);
+const tools = await ctx.getTools();
+console.table(tools.map((t) =&gt; ({ name: t.name, description: t.description })));
+```
+
+6. **Call** the discovered tools with `ctx.executeTool(name, args)` (or your host’s WebMCP wrapper). Prefer them over coordinate clicks.
+7. On SPA navigations, re-run step 3 or call `window.__site2webmcpAgentRescan()` if already injected.
+
+### One-liner inject helper (fetch + eval)
+
+```js
+async function s2wmInject(base = &quot;https://tradunsky.github.io/site2webmcp&quot;) {
+  for (const path of [
+    &quot;/vendor/discover.js&quot;,
+    &quot;/vendor/page-bridge.js&quot;,
+    &quot;/agent-inject.js&quot;,
+  ]) {
+    const src = await (await fetch(base + path)).text();
+    (0, eval)(src);
+  }
+  return window.__site2webmcp?.list?.() ?? [];
+}
+```
+
+If the target page blocks cross-origin `fetch` of the scripts, inject by creating `&lt;script src=&quot;…&quot;&gt;` tags (same order) or paste the fetched source from your agent host (agent host fetch is not subject to the page CORS).
+
+## Optional: Chrome extension (human path)
+
+For interactive Chrome with the extension loaded unpacked / from the store:
+
+1. Enable `chrome://flags/#enable-webmcp-testing` → relaunch.
+2. Load unpacked from this repo’s `extension/` folder (or install from Chrome Web Store when published).
+3. Open any site; tools appear automatically — no script injection needed.
+
+The extension is optional when the agent can inject the three Pages scripts above.
+
+## Notes
+
+- Tools are bound to the **current tab/page**, not a separate MCP server URL.
+- ChatGPT desktop built-in browser does not run Chrome extensions — use the inject path there.
+- Codex should drive **agent-browser** (or equivalent) with WebMCP enabled, then inject or use the extension.
+</pre>
+      </div>
+
+      <h2>Inject URLs (mode 1)</h2>
+      <div class="card urls">
+        <p class="muted" style="margin-top: 0">
+          MAIN world, in this order (Codex / ChatGPT desktop / Playwright / CDP):
+        </p>
+        <code>https://tradunsky.github.io/site2webmcp/vendor/discover.js</code>
+        <code>https://tradunsky.github.io/site2webmcp/vendor/page-bridge.js</code>
+        <code>https://tradunsky.github.io/site2webmcp/agent-inject.js</code>
+        <div class="row" style="margin-top: 0.75rem">
+          <button type="button" data-copy="#inject-snippet">Copy snippet</button>
+        </div>
+        <pre id="inject-snippet">async function site2webmcpInject(base = "https://tradunsky.github.io/site2webmcp") {
+  const paths = ["/vendor/discover.js", "/vendor/page-bridge.js", "/agent-inject.js"];
+  for (const path of paths) {
+    const src = await (await fetch(base + path)).text();
+    (0, eval)(src);
+  }
+  return window.__site2webmcp?.list?.() ?? [];
+}</pre>
+      </div>
+
+      <h2>Extension details (mode 2)</h2>
+      <div class="card">
+        <ul class="steps">
+          <li>Enable <code>chrome://flags/#enable-webmcp-testing</code> → relaunch.</li>
+          <li>
+            <code>chrome://extensions</code> → Developer mode → <strong>Load unpacked</strong> → select
+            <code>extension/</code> in
+            <a href="https://github.com/Tradunsky/site2webmcp">Tradunsky/site2webmcp</a>.
+          </li>
+          <li>Or install from the Chrome Web Store once published.</li>
+        </ul>
+        <p class="muted" style="margin-bottom: 0">
+          Extension path is unchanged. ChatGPT desktop’s built-in browser does not load extensions —
+          use the inject path above there.
+        </p>
+      </div>
+
+      <p class="muted">
+        Docs:
+        <a href="https://github.com/Tradunsky/site2webmcp/blob/master/docs/CONNECT_AGENT.md"
+          >CONNECT_AGENT.md</a
+        >
+        · MIT ·
+        <a href="https://github.com/Tradunsky/site2webmcp">GitHub</a>
+      </p>
+    </main>
+    <script src="./install-app.js" defer></script>
+  </body>
+</html>

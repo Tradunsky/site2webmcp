@@ -4,9 +4,36 @@
 
 Demo: https://www.youtube.com/watch?v=JejjEiZ4h3c
 
-**Chrome extension that turns the current page’s forms and primary actions into [WebMCP](https://developer.chrome.com/docs/ai/webmcp/imperative-api) tools** so AI agents can use real sites without a hand-written MCP server or pixel clicking.
+**Chrome extension + agent skill that turns the current page’s forms and primary actions into [WebMCP](https://developer.chrome.com/docs/ai/webmcp/imperative-api) tools** so AI agents can use real sites without a hand-written MCP server or pixel clicking.
 
 MIT licensed. Works on any `http(s)` page where WebMCP is available (Chrome flag / capable agent browser).
+
+## Install page (agents)
+
+**GitHub Pages:** https://tradunsky.github.io/site2webmcp/
+
+Open that URL in a WebMCP-capable browser. The page registers:
+
+- `install_site2webmcp` — returns the skill markdown + install instructions
+- `get_inject_snippet` — URLs / JS to inject on third-party pages
+- `get_extension_install` — short Chrome extension setup
+
+If `modelContext` is missing, enable `chrome://flags/#enable-webmcp-testing`, relaunch, and reload. Skill text is still shown for copy-paste.
+
+### Agent inject (no extension)
+
+On any page you control, inject **in order**:
+
+1. `https://tradunsky.github.io/site2webmcp/vendor/discover.js`
+2. `https://tradunsky.github.io/site2webmcp/vendor/page-bridge.js`
+3. `https://tradunsky.github.io/site2webmcp/agent-inject.js`
+
+Then list tools via `document.modelContext` / `navigator.modelContext` and prefer them over UI clicking.
+
+Skill sources:
+
+- Pages: https://tradunsky.github.io/site2webmcp/skill.md
+- Repo (Codex / Cursor style): [`skills/site2webmcp/SKILL.md`](skills/site2webmcp/SKILL.md)
 
 ## What it does
 
@@ -15,7 +42,9 @@ MIT licensed. Works on any `http(s)` page where WebMCP is available (Chrome flag
 
 Tools are discovered from the live DOM (then deduped). Same-action controls with different entities become one tool with a parameter enum when possible.
 
-## Install (developers)
+## Install Chrome extension (developers)
+
+Path unchanged: load the **`extension/`** folder.
 
 1. Enable `chrome://flags/#enable-webmcp-testing` → relaunch Chrome.
 2. `chrome://extensions` → Developer mode → **Load unpacked** → select the `extension/` folder.
@@ -23,11 +52,20 @@ Tools are discovered from the live DOM (then deduped). Same-action controls with
 
 Or install from the Chrome Web Store once published.
 
+## Demo modes
+
+1. **ChatGPT desktop + Skill** — https://tradunsky.github.io/site2webmcp/ (install skill, inject scripts on each page).
+2. **Chrome extension + agent-browser** — load `extension/`; same path as the [demo video](https://www.youtube.com/watch?v=JejjEiZ4h3c).
+
 ## Connect an agent
 
 See **[docs/CONNECT_AGENT.md](docs/CONNECT_AGENT.md)**. The extension popup has a short version under **Connect an agent**.
 
-Short version: point **Codex at agent-browser/Chrome** with the extension loaded; or debug with the WebMCP flag + DevTools `getTools()` / `executeTool`.
+| Client | Path |
+|--------|------|
+| **Codex + agent-browser** | Extension **or** inject the three Pages scripts |
+| **ChatGPT desktop browser** | Inject path only (extensions do not load) |
+| **Chrome + WebMCP flag** | Extension for humans; DevTools `getTools()` |
 
 ## Verify in DevTools
 
@@ -44,16 +82,24 @@ if (!ctx) {
 ## Repo layout
 
 ```
-extension/          # Chrome MV3 package (store zip root)
-  manifest.json
-  discover.js       # DOM → tool plan
-  content.js
-  background.js
-  page-bridge.js
-  popup.*
-  icons/
-docs/               # extra notes (not shipped in the store zip)
+extension/                 # Chrome MV3 package (store zip root)
+pages/                     # GitHub Pages install site (deploy root)
+  index.html
+  install-app.js           # WebMCP tools on the install page
+  agent-inject.js          # scan + site2webmcp:register for third-party pages
+  skill.md
+  vendor/                  # synced copies of discover.js + page-bridge.js
+skills/site2webmcp/        # Codex / Cursor skill
+scripts/sync-pages-vendor.sh
+.github/workflows/pages.yml
+docs/
 LICENSE
+```
+
+After changing `extension/discover.js` or `extension/page-bridge.js`, run:
+
+```bash
+./scripts/sync-pages-vendor.sh
 ```
 
 ## Packaging for Chrome Web Store
@@ -63,7 +109,7 @@ Zip the **contents** of `extension/` so `manifest.json` is at the zip root.
 ## Troubleshooting
 
 - **`modelContext` undefined:** enable the WebMCP testing flag; use `https://` or `http://localhost` (not `0.0.0.0`).
-- **No tools:** reload the page after loading/updating the extension.
+- **No tools:** reload the page after loading/updating the extension (or re-inject the three scripts).
 - **Duplicate search tools:** discovery dedupes `search` vs `search_query` after scan.
 
 ## Privacy

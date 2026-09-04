@@ -201,25 +201,25 @@ Turn the current page’s forms and primary actions into WebMCP tools so you can
 
 ## When to use
 
-Any `http(s)` page where you control a Chromium browser that supports script injection and WebMCP (`document.modelContext` / `navigator.modelContext`), including:
+Any `http(s)` page where you control a Chromium browser that can **inject scripts** into the page MAIN world and where WebMCP is available (`document.modelContext` / `navigator.modelContext`), including:
 
-- Codex + agent-browser / Playwright / CDP
-- ChatGPT desktop browser (script injection path — Chrome extensions do **not** load there)
-- Any agent that can evaluate JS in the page MAIN world
+- ChatGPT desktop (built-in browser)
+- Codex / Playwright / CDP / agent-browser **via script inject**
+- Any agent that can evaluate JS in the page
 
 Prefer Site2WebMCP tools over UI clicking whenever they are available.
 
-## Pages origin
+This skill is the **inject** path. The Chrome extension is a separate product path (documented on the install page), not part of this skill.
 
-Install + vendor scripts live at:
+## Scripts origin
 
 `https://tradunsky.github.io/site2webmcp/`
 
-## Steps (agent-controlled browser)
+## Steps
 
 1. **Open** the target page (`https://…` or `http://localhost`).
 2. **Ensure WebMCP** is available in that browser profile (`chrome://flags/#enable-webmcp-testing` → relaunch when using stock Chrome).
-3. **Inject three scripts in order** into the page MAIN world (evaluate / `addScriptTag` / CDP `Runtime.evaluate` with the fetched source — do not skip order):
+3. **Inject three scripts in order** into the page MAIN world (evaluate / `addScriptTag` / CDP with fetched source — do not skip order):
 
 ```text
 https://tradunsky.github.io/site2webmcp/vendor/discover.js
@@ -232,7 +232,7 @@ https://tradunsky.github.io/site2webmcp/agent-inject.js
 
 ```js
 const ctx = document.modelContext ?? navigator.modelContext;
-if (!ctx) throw new Error(&quot;WebMCP unavailable&quot;);
+if (!ctx) throw new Error("WebMCP unavailable");
 const tools = await ctx.getTools();
 console.table(tools.map((t) =&gt; ({ name: t.name, description: t.description })));
 ```
@@ -243,11 +243,11 @@ console.table(tools.map((t) =&gt; ({ name: t.name, description: t.description })
 ### One-liner inject helper (fetch + eval)
 
 ```js
-async function s2wmInject(base = &quot;https://tradunsky.github.io/site2webmcp&quot;) {
+async function s2wmInject(base = "https://tradunsky.github.io/site2webmcp") {
   for (const path of [
-    &quot;/vendor/discover.js&quot;,
-    &quot;/vendor/page-bridge.js&quot;,
-    &quot;/agent-inject.js&quot;,
+    "/vendor/discover.js",
+    "/vendor/page-bridge.js",
+    "/agent-inject.js",
   ]) {
     const src = await (await fetch(base + path)).text();
     (0, eval)(src);
@@ -256,23 +256,13 @@ async function s2wmInject(base = &quot;https://tradunsky.github.io/site2webmcp&q
 }
 ```
 
-If the target page blocks cross-origin `fetch` of the scripts, inject by creating `&lt;script src=&quot;…&quot;&gt;` tags (same order) or paste the fetched source from your agent host (agent host fetch is not subject to the page CORS).
-
-## Optional: Chrome extension (human path)
-
-For interactive Chrome with the extension loaded unpacked / from the store:
-
-1. Enable `chrome://flags/#enable-webmcp-testing` → relaunch.
-2. Load unpacked from this repo’s `extension/` folder (or install from Chrome Web Store when published).
-3. Open any site; tools appear automatically — no script injection needed.
-
-The extension is optional when the agent can inject the three Pages scripts above.
+If the target page blocks cross-origin `fetch` of the scripts, inject by creating `&lt;script src="…"&gt;` tags (same order) or paste the fetched source from your agent host (agent host fetch is not subject to the page CORS).
 
 ## Notes
 
 - Tools are bound to the **current tab/page**, not a separate MCP server URL.
-- ChatGPT desktop built-in browser does not run Chrome extensions — use the inject path there.
-- Codex should drive **agent-browser** (or equivalent) with WebMCP enabled, then inject or use the extension.
+- Re-inject after hard navigations; soft SPA updates may only need `__site2webmcpAgentRescan()`.
+
 </pre>
       </div>
 

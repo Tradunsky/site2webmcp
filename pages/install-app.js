@@ -6,7 +6,7 @@
   "use strict";
 
   const PAGES_ORIGIN = "https://tradunsky.github.io/site2webmcp";
-  const SKILL_URL = PAGES_ORIGIN + "/skill.md";
+  const SKILL_URL = PAGES_ORIGIN + "/site2webmcp/SKILL.md";
   const INJECT_URL = PAGES_ORIGIN + "/agent-inject.js";
   const DISCOVER_URL = PAGES_ORIGIN + "/vendor/discover.js";
   const BRIDGE_URL = PAGES_ORIGIN + "/vendor/page-bridge.js";
@@ -32,7 +32,7 @@
   async function loadSkillMarkdown() {
     if (skillMarkdownCache) return skillMarkdownCache;
     try {
-      const res = await fetch(new URL("skill.md", location.href).href, { cache: "no-cache" });
+      const res = await fetch(new URL("site2webmcp/SKILL.md", location.href).href, { cache: "no-cache" });
       if (res.ok) {
         skillMarkdownCache = await res.text();
         return skillMarkdownCache;
@@ -127,7 +127,7 @@
             skillUrl: SKILL_URL,
             pagesOrigin: PAGES_ORIGIN,
             instructions: [
-              "Save the skill markdown as an agent skill (e.g. skills/site2webmcp/SKILL.md for Codex/Cursor).",
+              "Save as a skill folder site2webmcp/SKILL.md (Agent Skills standard — works with ChatGPT, Codex, Claude, and compatible tools).",
               "On each target page, inject discover.js → page-bridge.js → agent-inject.js from " + PAGES_ORIGIN,
               "Then list WebMCP tools and prefer them over UI clicking.",
             ].join("\n"),

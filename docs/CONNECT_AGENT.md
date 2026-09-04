@@ -4,7 +4,7 @@ WebMCP tools are **bound to the web page** in the agent’s browser tab. There i
 
 ## Demo modes
 
-1. **ChatGPT desktop + Skill** — open https://tradunsky.github.io/site2webmcp/, install the skill (`install_site2webmcp` or copy `skill.md`), inject discover → page-bridge → agent-inject on each target page.
+1. **ChatGPT desktop + Skill** — open https://tradunsky.github.io/site2webmcp/, install the skill (`install_site2webmcp` or copy `site2webmcp/SKILL.md`), inject discover → page-bridge → agent-inject on each target page.
 2. **Chrome extension + agent-browser (Codex)** — load `extension/`, use agent-browser/Chrome with the WebMCP flag. Matches the [demo video](https://www.youtube.com/watch?v=JejjEiZ4h3c).
 
 ## Install page
@@ -34,8 +34,8 @@ It **cannot** see extension-registered tools in ChatGPT’s built-in browser (Ch
 
 ## Skill install (Codex / ChatGPT desktop / Cursor)
 
-1. Open https://tradunsky.github.io/site2webmcp/ and call `install_site2webmcp`, **or** copy [`skills/site2webmcp/SKILL.md`](../skills/site2webmcp/SKILL.md) / https://tradunsky.github.io/site2webmcp/skill.md
-2. Save it where your agent loads skills (Codex/Cursor: repo `skills/site2webmcp/SKILL.md` or your skills directory).
+1. Open https://tradunsky.github.io/site2webmcp/ and call `install_site2webmcp`, **or** copy the skill package from [`pages/site2webmcp/`](../pages/site2webmcp/) / https://tradunsky.github.io/site2webmcp/site2webmcp/SKILL.md
+2. Save the folder as `site2webmcp/` (must contain `SKILL.md`) in your agent’s skills directory — [Agent Skills](https://agentskills.io/specification) layout used by ChatGPT, Codex, Claude, and compatible tools.
 3. On each target page the agent controls, inject in order:
 
 ```text
@@ -70,7 +70,7 @@ console.table(tools.map(t => ({ name: t.name, description: t.description })));
 
 ## Checklist — ChatGPT desktop
 
-1. Install the Site2WebMCP skill (from the install page or `skills/site2webmcp/SKILL.md`).
+1. Install the Site2WebMCP skill (from the install page or `pages/site2webmcp/SKILL.md`).
 2. In the built-in browser, inject the three Pages scripts in order (extensions will not run).
 3. List tools with `getTools()` / the product’s WebMCP UI and call them.
 

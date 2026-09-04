@@ -1,0 +1,8 @@
+interface:
+  display_name: "Site2WebMCP"
+  short_description: "Turn the current page into WebMCP tools via script inject"
+  brand_color: "#4C8DFF"
+  default_prompt: "Install and use Site2WebMCP: inject the three scripts on this page, list WebMCP tools, prefer them over clicking."
+
+policy:
+  allow_implicit_invocation: true

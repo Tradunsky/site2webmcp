@@ -20,9 +20,9 @@ Open that URL in a WebMCP-capable browser. The page registers:
 
 If `modelContext` is missing, enable `chrome://flags/#enable-webmcp-testing`, relaunch, and reload. Skill text is still shown for copy-paste.
 
-### Agent inject (no extension)
+### Agent inject (Codex CLI + agent-browser)
 
-On any page you control, inject **in order**:
+With **agent-browser**, on any page after each load, inject **in order**:
 
 1. `https://tradunsky.github.io/site2webmcp/vendor/discover.js`
 2. `https://tradunsky.github.io/site2webmcp/vendor/page-bridge.js`
@@ -54,7 +54,7 @@ Or install from the Chrome Web Store once published.
 
 ## Demo modes
 
-1. **ChatGPT desktop + Skill** — https://tradunsky.github.io/site2webmcp/ (install `site2webmcp` skill, inject scripts on each page load).
+1. **Codex CLI + Skill + agent-browser** — install `site2webmcp`, drive **agent-browser**, inject scripts on each page load. (ChatGPT desktop’s built-in browser is read-only and will not work.)
 2. **Chrome extension + agent-browser** — load `extension/`; same path as the [demo video](https://www.youtube.com/watch?v=JejjEiZ4h3c).
 
 ## Connect an agent
@@ -63,8 +63,9 @@ See **[docs/CONNECT_AGENT.md](docs/CONNECT_AGENT.md)**. The extension popup has 
 
 | Client | Path |
 |--------|------|
-| **Codex + agent-browser** | Extension **or** inject the three Pages scripts |
-| **ChatGPT desktop browser** | Inject path only (extensions do not load) |
+| **Codex CLI + agent-browser + skill** | Inject the three Pages scripts (demo mode 1) |
+| **Codex CLI + agent-browser + extension** | Load `extension/` (demo mode 2 / video) |
+| **ChatGPT desktop built-in browser** | **Not supported** (read-only pages) |
 | **Chrome + WebMCP flag** | Extension for humans; DevTools `getTools()` |
 
 ## Verify in DevTools
@@ -89,7 +90,7 @@ pages/                     # GitHub Pages install site (deploy root)
   agent-inject.js          # scan + site2webmcp:register for third-party pages
   site2webmcp/SKILL.md
   vendor/                  # synced copies of discover.js + page-bridge.js
-pages/site2webmcp/       # Agent Skills package (ChatGPT / Codex / Claude)
+pages/site2webmcp/       # Agent Skills package (Codex CLI + agent-browser)
 scripts/sync-pages-vendor.sh
 .github/workflows/pages.yml
 docs/

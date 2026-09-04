@@ -1,8 +1,8 @@
 interface:
   display_name: "Site2WebMCP"
-  short_description: "Turn the current page into WebMCP tools via script inject"
+  short_description: "Codex CLI + agent-browser: inject page WebMCP tools"
   brand_color: "#4C8DFF"
-  default_prompt: "Install and use Site2WebMCP: inject the three scripts on this page, list WebMCP tools, prefer them over clicking."
+  default_prompt: "Use Codex with agent-browser. Install Site2WebMCP if needed, open the target site, inject the three scripts, list WebMCP tools, prefer them over clicking. Do not use ChatGPT’s built-in browser."
 
 policy:
   allow_implicit_invocation: true

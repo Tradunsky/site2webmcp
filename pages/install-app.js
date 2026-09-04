@@ -79,8 +79,8 @@
       "Repo: https://github.com/Tradunsky/site2webmcp",
       "Extension path in repo: extension/",
       "",
-      "Note: ChatGPT desktop built-in browser does not load Chrome extensions.",
-      "Use the agent inject scripts from this install page instead.",
+      "Note: Use Codex CLI + agent-browser (or plain Chrome).",
+      "ChatGPT desktop built-in browser is read-only and is not supported.",
     ].join("\n");
   }
 
@@ -116,7 +116,7 @@
       {
         name: "install_site2webmcp",
         description:
-          "Install the Site2WebMCP agent skill. Returns skill markdown and instructions for Codex / ChatGPT desktop / any browser-controlling agent.",
+          "Install the Site2WebMCP agent skill for Codex CLI + agent-browser. Returns skill markdown and inject instructions.",
         inputSchema: { type: "object", properties: {}, additionalProperties: false },
         annotations: { readOnlyHint: true },
         execute: async () => {
@@ -127,7 +127,7 @@
             skillUrl: SKILL_URL,
             pagesOrigin: PAGES_ORIGIN,
             instructions: [
-              "Save as a skill folder site2webmcp/SKILL.md (Agent Skills standard — works with ChatGPT, Codex, Claude, and compatible tools).",
+              "Save as a skill folder site2webmcp/SKILL.md (Agent Skills standard). Use with Codex CLI + agent-browser.",
               "On each target page, inject discover.js → page-bridge.js → agent-inject.js from " + PAGES_ORIGIN,
               "Then list WebMCP tools and prefer them over UI clicking.",
             ].join("\n"),

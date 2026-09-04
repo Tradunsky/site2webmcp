@@ -7,6 +7,8 @@ on:
       - master
     paths:
       - "pages/**"
+      - "extension/discover.js"
+      - "extension/page-bridge.js"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -28,6 +30,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Sync vendor from extension
+        run: bash scripts/sync-pages-vendor.sh
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

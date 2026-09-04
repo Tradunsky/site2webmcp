@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Sync extension MAIN/shared libraries into the GitHub Pages vendor folder.
+# Used by GitHub Actions before Pages deploy (source of truth for the live site).
+# Safe to run locally for preview; pages/vendor/*.js are gitignored.
 # Do not fork logic — always copy from extension/.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

@@ -32,8 +32,8 @@ Then list tools via `document.modelContext` / `navigator.modelContext` and prefe
 
 Skill sources:
 
-- Pages: https://tradunsky.github.io/site2webmcp/skill.md
-- Repo (Codex / Cursor style): [`skills/site2webmcp/SKILL.md`](skills/site2webmcp/SKILL.md)
+- Pages: https://tradunsky.github.io/site2webmcp/site2webmcp/SKILL.md
+- Repo (Codex / Cursor style): [`pages/site2webmcp/SKILL.md`](pages/site2webmcp/SKILL.md) ([Agent Skills](https://agentskills.io/specification) layout)
 
 ## What it does
 
@@ -54,7 +54,7 @@ Or install from the Chrome Web Store once published.
 
 ## Demo modes
 
-1. **ChatGPT desktop + Skill** — https://tradunsky.github.io/site2webmcp/ (install skill, inject scripts on each page).
+1. **ChatGPT desktop + Skill** — https://tradunsky.github.io/site2webmcp/ (install `site2webmcp` skill, inject scripts on each page load).
 2. **Chrome extension + agent-browser** — load `extension/`; same path as the [demo video](https://www.youtube.com/watch?v=JejjEiZ4h3c).
 
 ## Connect an agent
@@ -87,9 +87,9 @@ pages/                     # GitHub Pages install site (deploy root)
   index.html
   install-app.js           # WebMCP tools on the install page
   agent-inject.js          # scan + site2webmcp:register for third-party pages
-  skill.md
+  site2webmcp/SKILL.md
   vendor/                  # synced copies of discover.js + page-bridge.js
-skills/site2webmcp/        # Codex / Cursor skill
+pages/site2webmcp/       # Agent Skills package (ChatGPT / Codex / Claude)
 scripts/sync-pages-vendor.sh
 .github/workflows/pages.yml
 docs/

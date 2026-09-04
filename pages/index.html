@@ -63,6 +63,11 @@
       }
       button, .btn {
         appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.25rem;
+        line-height: 1.2;
         border: 1px solid var(--border);
         background: transparent;
         color: var(--text);
@@ -70,6 +75,7 @@
         padding: 0.45rem 0.75rem;
         font: inherit;
         cursor: pointer;
+        text-decoration: none;
       }
       button:hover, .btn:hover { border-color: var(--accent); }
       code, pre {
@@ -89,7 +95,7 @@
         border-color: var(--warn);
         color: var(--warn);
       }
-      ul.steps { padding-left: 1.2rem; }
+      ul.steps, ol.steps { padding-left: 1.25rem; margin: 0.5rem 0 0; }
       .muted { color: var(--muted); }
       .urls code { display: block; margin: 0.25rem 0; }
 
@@ -98,12 +104,28 @@
         grid-template-columns: 1fr;
         gap: 0.85rem;
         margin: 1rem 0 1.25rem;
+        align-items: stretch;
       }
       @media (min-width: 720px) {
         .modes { grid-template-columns: 1fr 1fr; }
       }
-      .mode h2 { font-size: 1.05rem; }
-      .mode .steps { margin: 0.5rem 0 0.85rem; }
+      .modes .card { margin: 0; }
+      .mode {
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+      .mode h2 { font-size: 1.05rem; margin: 0 0 0.4rem; }
+      .mode > .muted { margin: 0 0 0.35rem; min-height: 2.7em; }
+      .mode .steps {
+        margin: 0.35rem 0 0;
+        flex: 1 1 auto;
+      }
+      .mode .steps li { margin-bottom: 0.35rem; }
+      .mode .row {
+        margin-top: auto;
+        padding-top: 1rem;
+      }
     </style>
   </head>
   <body>
